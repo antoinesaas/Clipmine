@@ -1,5 +1,6 @@
 import { ClerkProvider } from "@clerk/nextjs";
 import { Toaster } from "sonner";
+import { Analytics } from "@vercel/analytics/react";
 import type { Metadata } from "next";
 import "./globals.css";
 
@@ -12,6 +13,9 @@ export const metadata: Metadata = {
     description: "La matière première de tes édits, minée et recadrée en secondes.",
     type: "website",
   },
+  verification: {
+    google: "Fumx5QHDih4MJ6PdWDZUSWBGnQ6p1eSyhfm3Ql9dtPI",
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -21,6 +25,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <body>
           {children}
           <Toaster theme="dark" position="bottom-center" />
+          <Analytics />
         </body>
       </html>
     </ClerkProvider>
