@@ -34,11 +34,16 @@ const DEMOS = ["Cars edit", "Motivation", "Anime AMV", "Nature 4K"];
 
 type Result = { youtubeId: string; title: string; channel: string; thumb?: string; views: number; viralScore: number; bg?: string };
 
+function isYoutubeUrl(s: string) {
+  return /(?:youtube\.com\/|youtu\.be\/)/.test(s);
+}
+
 export default function Landing() {
   const [bgRows, setBgRows] = useState<string[][]>([]);
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<Result[] | null>(null);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     setBgRows([0, 1, 2].map(() => Array.from({ length: 24 }, rg)));
@@ -50,11 +55,23 @@ export default function Landing() {
     setQuery(term);
     setLoading(true);
     setResults([]);
+    setError(null);
     try {
       const r = await fetch(`/api/search?q=${encodeURIComponent(term)}`);
       const data = await r.json();
-      setResults((data.results ?? []).map((x: Result) => ({ ...x, bg: rg() })));
+      if (!r.ok) {
+        setError(data.message ?? "Une erreur est survenue. Vérifie ta clé YouTube API.");
+        setResults([]);
+        return;
+      }
+      if (!data.results?.length) {
+        setError("Aucun résultat trouvé. Essaie un autre mot-clé ou colle un lien YouTube.");
+        setResults([]);
+        return;
+      }
+      setResults(data.results.map((x: Result) => ({ ...x, bg: rg() })));
     } catch {
+      setError("Erreur réseau. Réessaie dans quelques instants.");
       setResults([]);
     } finally {
       setLoading(false);
@@ -96,17 +113,26 @@ export default function Landing() {
 
           <div className="search-box">
             <div className="search-shell">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="7" /><path d="m21 21-4.3-4.3" /></svg>
+              {isYoutubeUrl(query)
+                ? <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FF4444" strokeWidth="2"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.95-1.96C18.88 4 12 4 12 4s-6.88 0-8.59.46A2.78 2.78 0 0 0 1.46 6.42 29 29 0 0 0 1 12a29 29 0 0 0 .46 5.58 2.78 2.78 0 0 0 1.95 1.96C5.12 20 12 20 12 20s6.88 0 8.59-.46a2.78 2.78 0 0 0 1.96-1.96A29 29 0 0 0 23 12a29 29 0 0 0-.46-5.58z" /><polygon points="9.75 15.02 15.5 12 9.75 8.98 9.75 15.02" fill="#FF4444" stroke="none" /></svg>
+                : <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="7" /><path d="m21 21-4.3-4.3" /></svg>
+              }
               <input className="search-input" value={query} onChange={(e) => setQuery(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && runSearch()}
-                placeholder="ex : voiture luxe nuit, motivation, anime fight scene..." />
+                placeholder="Mots-clés ou colle un lien YouTube directement..." />
               <button className="btn btn-primary" onClick={() => runSearch()}>Miner</button>
             </div>
             <div className="chips">
               {CHIPS.map(([label, q]) => (<span key={q} className="chip" onClick={() => runSearch(q)}>{label}</span>))}
             </div>
-            <div className="hero-note">Résultats en <b>4K source</b> · autocrop 9:16 / 16:9 / 4:3 · enhance IA inclus</div>
+            <div className="hero-note">Résultats en <b>4K source</b> · lien YouTube direct accepté · autocrop 9:16 / 16:9 / 4:3</div>
           </div>
+
+          {error && !loading && (
+            <div style={{ maxWidth: 660, margin: "20px auto 0", background: "rgba(239,68,68,.1)", border: "1px solid rgba(239,68,68,.3)", borderRadius: 12, padding: "14px 18px", color: "#F87171", fontSize: 14, textAlign: "center" }}>
+              ⚠️ {error}
+            </div>
+          )}
 
           {(loading || (results && results.length > 0)) && (
             <div className="results">
