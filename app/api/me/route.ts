@@ -1,0 +1,27 @@
+import { NextResponse } from "next/server";
+import { auth, currentUser } from "@clerk/nextjs/server";
+import { prisma } from "@/lib/prisma";
+import { PLAN_QUOTAS } from "@/lib/entitlements";
+
+// GET /api/me — renvoie l'état de l'utilisateur courant (crée le user si absent)
+export async function GET() {
+  const { userId: clerkId } = auth();
+  if (!clerkId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+
+  let user = await prisma.user.findUnique({ where: { clerkId } });
+  if (!user) {
+    const cu = await currentUser();
+    user = await prisma.user.create({
+      data: { clerkId, email: cu?.emailAddresses[0]?.emailAddress ?? `${clerkId}@clipmine.io` },
+    });
+  }
+
+  const quota = PLAN_QUOTAS[user.plan as keyof typeof PLAN_QUOTAS].monthly;
+  return NextResponse.json({
+    plan: user.plan,
+    freeExportAvailable: !user.freeExportUsed,
+    exportsThisMonth: user.exportsThisMonth,
+    monthlyQuota: quota === Infinity ? null : quota,
+    bonusCredits: user.bonusCredits,
+  });
+}

@@ -1,0 +1,48 @@
+// ClipMine — schéma de base de données
+// npx prisma migrate dev --name init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Plan {
+  FREE
+  CREATOR
+  PRO
+}
+
+model User {
+  id              String     @id @default(cuid())
+  clerkId         String     @unique          // lien avec Clerk
+  email           String     @unique
+  plan            Plan       @default(FREE)
+  stripeCustomerId String?   @unique
+
+  // --- coeur de la monétisation ---
+  freeExportUsed  Boolean    @default(false)  // le 1 export 4K offert
+  exportsThisMonth Int       @default(0)      // quota mensuel (reset par cron)
+  bonusCredits    Int        @default(0)      // crédits achetés à l'unité
+
+  downloads       Download[]
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+}
+
+model Download {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  youtubeId   String
+  title       String
+  ratio       String   // "9:16" | "16:9" | "4:3"
+  quality     String   // "4K" | "1080p"
+  enhanced    Boolean  @default(false)
+  fileUrl     String?  // lien R2
+  status      String   @default("processing") // processing | ready | failed
+  createdAt   DateTime @default(now())
+}
