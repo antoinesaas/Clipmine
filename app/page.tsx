@@ -223,9 +223,9 @@ export default function Landing() {
         <div className="wrap">
           <div className="foot-in">
             <div className="logo"><span className="dot" />Clip<span className="b">Mine</span></div>
-            <div className="foot-links"><a href="#features">Fonctions</a><a href="#pricing">Tarifs</a><a href="#">CGU</a><a href="#">Contact</a></div>
+            <div className="foot-links"><a href="#features">Fonctions</a><a href="#pricing">Tarifs</a><Link href="/cgu">CGU</Link><Link href="/mentions-legales">Mentions légales</Link><a href="mailto:contact@clipmine.fr">Contact</a></div>
           </div>
-          <p className="legal">ClipMine est un outil de recherche et de traitement vidéo. L'utilisateur est seul responsable de l'usage des contenus téléchargés et du respect des droits d'auteur applicables. © 2025 ClipMine.</p>
+          <p className="legal">ClipMine est un outil de recherche et de traitement vidéo. L'utilisateur est seul responsable de l'usage des contenus téléchargés et du respect des droits d'auteur applicables. © 2026 ClipMine.</p>
         </div>
       </footer>
     </>
