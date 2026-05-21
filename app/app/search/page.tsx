@@ -38,7 +38,11 @@ function SearchContent() {
 
 export default function SearchPage() {
   return (
-    <Suspense>
+    <Suspense fallback={
+      <div className="app-page-min">
+        <div className="clip-skeleton" style={{ height: 120, marginTop: 20 }} />
+      </div>
+    }>
       <SearchContent />
     </Suspense>
   );

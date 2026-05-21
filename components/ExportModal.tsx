@@ -5,7 +5,7 @@ import { createPortal } from "react-dom";
 import { toast } from "sonner";
 import type { ClipResult } from "./SearchPanel";
 import { saveExportLocal } from "./SearchPanel";
-import { embedUrl } from "@/lib/demo-clips";
+import { embedUrl, thumbForId } from "@/lib/demo-clips";
 
 function useBodyLock(open: boolean) {
   useEffect(() => {
@@ -14,6 +14,58 @@ function useBodyLock(open: boolean) {
     document.body.style.overflow = "hidden";
     return () => { document.body.style.overflow = prev; };
   }, [open]);
+}
+
+function useEscape(onClose: () => void) {
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
+}
+
+function ClipVideo({ youtubeId, title }: { youtubeId: string; title: string }) {
+  const [mobile, setMobile] = useState(false);
+
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 640px)");
+    const update = () => setMobile(mq.matches);
+    update();
+    mq.addEventListener("change", update);
+    return () => mq.removeEventListener("change", update);
+  }, []);
+
+  if (mobile) {
+    return (
+      <a
+        className="modal-video modal-video-link"
+        href={`https://www.youtube.com/watch?v=${youtubeId}`}
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        <img src={thumbForId(youtubeId)} alt={title} />
+        <span className="modal-video-play" aria-hidden>
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="white">
+            <path d="M8 5v14l11-7z" />
+          </svg>
+        </span>
+        <span className="modal-video-label">Lire sur YouTube</span>
+      </a>
+    );
+  }
+
+  return (
+    <div className="modal-video">
+      <iframe
+        src={embedUrl(youtubeId)}
+        title={title}
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+        allowFullScreen
+      />
+    </div>
+  );
 }
 
 function ModalShell({
@@ -25,15 +77,17 @@ function ModalShell({
 }) {
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
+  useEscape(onClose);
 
   if (!mounted) return null;
 
   return createPortal(
-    <div className="overlay" onClick={onClose} role="dialog" aria-modal="true">
-      <div className="modal modal-clip" onClick={(e) => e.stopPropagation()}>
+    <>
+      <button type="button" className="overlay-backdrop" onClick={onClose} aria-label="Fermer" />
+      <div className="clip-sheet" role="dialog" aria-modal="true">
         {children}
       </div>
-    </div>,
+    </>,
     document.body,
   );
 }
@@ -98,22 +152,15 @@ export function ExportModal({
 
   return (
     <ModalShell onClose={onClose}>
-      <button type="button" className="x" onClick={onClose} aria-label="Fermer">
+      <button type="button" className="clip-sheet-close" onClick={onClose} aria-label="Fermer">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
           <path d="M18 6 6 18M6 6l12 12" />
         </svg>
       </button>
 
-      <div className="modal-video">
-        <iframe
-          src={embedUrl(clip.youtubeId)}
-          title={clip.title}
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-          allowFullScreen
-        />
-      </div>
+      <ClipVideo youtubeId={clip.youtubeId} title={clip.title} />
 
-      <h3>{clip.movie ?? clip.title}</h3>
+      <h3 className="clip-sheet-title">{clip.movie ?? clip.title}</h3>
       {clip.scene && <p className="modal-scene">{clip.scene}</p>}
       {clip.transcript && (
         <p className="modal-quote">&ldquo;{clip.transcript}&rdquo;</p>
@@ -190,12 +237,12 @@ export function PaywallModal({ onClose }: { onClose: () => void }) {
 
   return (
     <ModalShell onClose={onClose}>
-      <button type="button" className="x" onClick={onClose} aria-label="Fermer">
+      <button type="button" className="clip-sheet-close" onClick={onClose} aria-label="Fermer">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
           <path d="M18 6 6 18M6 6l12 12" />
         </svg>
       </button>
-      <h3>Quota épuisé</h3>
+      <h3 className="clip-sheet-title">Quota épuisé</h3>
       <p style={{ color: "var(--mut)", fontSize: 14, margin: "8px 0 20px" }}>
         Passe Creator ou Pro pour continuer à exporter en 4K.
       </p>
