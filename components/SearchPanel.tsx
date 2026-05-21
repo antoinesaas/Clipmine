@@ -9,25 +9,29 @@ export type ClipResult = {
   youtubeId: string;
   title: string;
   movie?: string;
+  scene?: string;
   channel: string;
   thumb?: string;
   views: number;
   viralScore: number;
   type?: MediaType;
+  transcript?: string;
   quote?: string;
+  is4K?: boolean;
   direct?: boolean;
 };
 
 const CHIPS: [string, string][] = [
-  ["Inception", "Inception movie scene"],
-  ["Breaking Bad", "Breaking Bad series scene"],
-  ["Dark Knight", "Dark Knight Joker scene"],
-  ["Interstellar", "Interstellar docking scene"],
-  ["Game of Thrones", "Game of Thrones battle scene"],
-  ["Fight Club", "Fight Club movie scene"],
+  ["Inception", "Inception movie scene 4k"],
+  ["Breaking Bad", "Breaking Bad series scene 4k"],
+  ["Dark Knight", "Dark Knight Joker scene 4k"],
+  ["Interstellar", "Interstellar docking scene 4k"],
+  ["Oppenheimer", "Oppenheimer movie scene 4k"],
+  ["John Wick", "John Wick 4 fight scene 4k"],
 ];
 
 type TypeFilter = "all" | MediaType;
+type SortMode = "scene" | "popular";
 
 export default function SearchPanel({
   initialQuery = "",
@@ -45,13 +49,14 @@ export default function SearchPanel({
   const [demoMode, setDemoMode] = useState(false);
   const [ratio, setRatio] = useState("9:16");
   const [typeFilter, setTypeFilter] = useState<TypeFilter>("all");
+  const [sort, setSort] = useState<SortMode>("scene");
 
   useEffect(() => {
-    if (initialQuery.trim()) runSearch(initialQuery, typeFilter);
+    if (initialQuery.trim()) runSearch(initialQuery, typeFilter, sort);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialQuery]);
 
-  async function runSearch(q?: string, type: TypeFilter = typeFilter) {
+  async function runSearch(q?: string, type: TypeFilter = typeFilter, sortMode: SortMode = sort) {
     const term = (q ?? query).trim();
     if (!term) return;
     setQuery(term);
@@ -61,7 +66,7 @@ export default function SearchPanel({
     setDemoMode(false);
 
     try {
-      const params = new URLSearchParams({ q: term });
+      const params = new URLSearchParams({ q: term, sort: sortMode });
       if (type !== "all") params.set("type", type);
       const r = await fetch(`/api/search?${params}`);
       const data = await r.json();
@@ -70,7 +75,7 @@ export default function SearchPanel({
         return;
       }
       if (!data.results?.length) {
-        setError(data.hint ?? "Aucune scène trouvée. Essaie un film, une série, ou colle un lien YouTube.");
+        setError(data.hint ?? "Aucune scène trouvée. Essaie un film, une réplique, ou colle un lien YouTube.");
         return;
       }
       setResults(data.results);
@@ -84,14 +89,20 @@ export default function SearchPanel({
 
   function setFilter(type: TypeFilter) {
     setTypeFilter(type);
-    if (query.trim()) runSearch(query, type);
+    if (query.trim()) runSearch(query, type, sort);
+  }
+
+  function setSortMode(mode: SortMode) {
+    setSort(mode);
+    if (query.trim()) runSearch(query, typeFilter, mode);
   }
 
   return (
     <div className="search-panel">
       {!compact && (
         <p className="search-hint">
-          Tape une réplique, un film ou une série — ou <strong>colle un lien YouTube</strong> directement.
+          Meilleurs clips YouTube 4K · triés par scène · avec transcription.
+          Tape une réplique, un film — ou <strong>colle un lien YouTube</strong>.
         </p>
       )}
 
@@ -101,7 +112,7 @@ export default function SearchPanel({
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && runSearch()}
-          placeholder="Ex: Inception dream scene… ou https://youtu.be/…"
+          placeholder="Réplique, film, série… ou lien YouTube"
           autoFocus={!!initialQuery}
           enterKeyHint="search"
         />
@@ -125,6 +136,15 @@ export default function SearchPanel({
             {label}
           </button>
         ))}
+      </div>
+
+      <div className="type-tabs">
+        <button type="button" className={`type-tab ${sort === "scene" ? "on" : ""}`} onClick={() => setSortMode("scene")}>
+          Par scène
+        </button>
+        <button type="button" className={`type-tab ${sort === "popular" ? "on" : ""}`} onClick={() => setSortMode("popular")}>
+          Popularité
+        </button>
       </div>
 
       {!compact && (
@@ -151,7 +171,7 @@ export default function SearchPanel({
       </div>
 
       {demoMode && (
-        <p className="demo-hint">Mode démo · configure <code>YOUTUBE_API_KEY</code> pour la recherche live.</p>
+        <p className="demo-hint">Mode démo · configure <code>YOUTUBE_API_KEY</code> pour les clips 4K live + transcriptions auto.</p>
       )}
 
       {error && !loading && <p className="search-err">{error}</p>}
@@ -163,7 +183,7 @@ export default function SearchPanel({
                 <div key={i} className="clip-skeleton" />
               ))
             : results!.map((r) => (
-                <ClipCard key={r.youtubeId} clip={r} ratio={ratio} onSelect={() => onSelect(r)} />
+                <ClipCard key={`${r.youtubeId}-${r.scene ?? r.title}`} clip={r} ratio={ratio} onSelect={() => onSelect(r)} />
               ))}
         </div>
       )}

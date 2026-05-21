@@ -1,10 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { SignedIn, SignedOut, SignInButton, UserButton } from "@clerk/nextjs";
+import { SignedIn, SignedOut, SignInButton, UserButton, useAuth } from "@clerk/nextjs";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { DEMO_CLIPS, thumbForId } from "@/lib/demo-clips";
+import { DEMO_CLIPS, TRENDING_FILMS, thumbForId, clipsForHero } from "@/lib/demo-clips";
+import AuthSearchButton from "@/components/AuthSearchButton";
 
 const CHIPS = [
   ["Inception", "Inception movie scene"],
@@ -36,15 +37,16 @@ function isYoutubeUrl(s: string) {
 
 export default function Landing() {
   const router = useRouter();
+  const { isSignedIn } = useAuth();
   const [bgRows, setBgRows] = useState<string[][]>([]);
   const [query, setQuery] = useState("");
   const [comparePos, setComparePos] = useState(50);
 
   useEffect(() => {
-    const thumbs = DEMO_CLIPS.map((c) => thumbForId(c.youtubeId));
+    const thumbs = clipsForHero();
     setBgRows([0, 1, 2].map((i) => {
-      const row = [...thumbs.slice(i * 7), ...thumbs.slice(0, i * 7)];
-      return Array.from({ length: 18 }, (_, j) => row[j % row.length]);
+      const rotated = [...thumbs.slice(i), ...thumbs.slice(0, i)];
+      return Array.from({ length: 14 }, (_, j) => rotated[j % rotated.length]);
     }));
   }, []);
 
@@ -138,36 +140,20 @@ export default function Landing() {
                 onKeyDown={(e) => {
                   if (e.key === "Enter") {
                     e.preventDefault();
-                    goSearch();
+                    if (isSignedIn) goSearch();
                   }
                 }}
                 placeholder="Réplique, film, série… ou lien YouTube"
               />
-              <SignedIn>
-                <button type="button" className="btn btn-primary" onClick={() => goSearch()}>
-                  Mine →
-                </button>
-              </SignedIn>
-              <SignedOut>
-                <SignInButton mode="modal" forceRedirectUrl={searchUrl()}>
-                  <button type="button" className="btn btn-primary" onClick={() => setQuery(query)}>
-                    Mine →
-                  </button>
-                </SignInButton>
-              </SignedOut>
+              <AuthSearchButton query={query || "Inception movie scene 4k"} className="btn btn-primary">
+                Mine →
+              </AuthSearchButton>
             </div>
             <div className="chips">
               {CHIPS.map(([label, q]) => (
-                <SignedIn key={q}>
-                  <button type="button" className="chip" onClick={() => goSearch(q)}>{label}</button>
-                </SignedIn>
-              ))}
-              {CHIPS.map(([label, q]) => (
-                <SignedOut key={`out-${q}`}>
-                  <SignInButton mode="modal" forceRedirectUrl={searchUrl(q)}>
-                    <button type="button" className="chip">{label}</button>
-                  </SignInButton>
-                </SignedOut>
+                <AuthSearchButton key={q} query={q} className="chip">
+                  {label}
+                </AuthSearchButton>
               ))}
             </div>
             <div className="hero-note">
@@ -176,14 +162,11 @@ export default function Landing() {
           </div>
         </div>
 
-        <div className="models-row">
-          {["Upscale", "Denoise", "Restore", "Stabilize", "Slow-Mo", "Interpolate"].map((m, i) => (
-            <div key={m} className="model-pill">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                <polyline points="20 6 9 17 4 12" />
-              </svg>
-              {m}
-            </div>
+        <div className="trending-row">
+          {TRENDING_FILMS.map(([label, q]) => (
+            <AuthSearchButton key={q} query={q} className="trending-pill">
+              {label}
+            </AuthSearchButton>
           ))}
         </div>
       </header>
@@ -284,39 +267,24 @@ export default function Landing() {
 
           <div className="demo-grid">
             {DEMO_CLIPS.slice(0, 8).map((c) => (
-              <SignedIn key={c.youtubeId}>
-                <Link
-                  href="/app/search"
-                  className="demo"
+              <AuthSearchButton
+                key={c.youtubeId}
+                query={`${c.movie} ${c.scene} 4k`}
+                className="demo demo-btn"
+              >
+                <span
+                  className="demo-bg"
                   style={{ backgroundImage: `url(${thumbForId(c.youtubeId)})` }}
-                >
-                  <span className="badge-4k">4K · 9:16</span>
-                  <div className="play">
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="white">
-                      <path d="M8 5v14l11-7z" />
-                    </svg>
-                  </div>
-                  <div className="lbl">{c.title}</div>
-                </Link>
-              </SignedIn>
-            ))}
-            {DEMO_CLIPS.slice(0, 8).map((c) => (
-              <SignedOut key={`out-${c.youtubeId}`}>
-                <SignInButton mode="modal" forceRedirectUrl="/app">
-                  <div
-                    className="demo"
-                    style={{ backgroundImage: `url(${thumbForId(c.youtubeId)})` }}
-                  >
-                    <span className="badge-4k">4K · 9:16</span>
-                    <div className="play">
-                      <svg width="22" height="22" viewBox="0 0 24 24" fill="white">
-                        <path d="M8 5v14l11-7z" />
-                      </svg>
-                    </div>
-                    <div className="lbl">{c.title}</div>
-                  </div>
-                </SignInButton>
-              </SignedOut>
+                />
+                <span className="badge-4k">4K · 9:16</span>
+                <span className="play">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="white">
+                    <path d="M8 5v14l11-7z" />
+                  </svg>
+                </span>
+                <span className="lbl">{c.movie} — {c.scene}</span>
+                <span className="demo-transcript">&ldquo;{c.transcript}&rdquo;</span>
+              </AuthSearchButton>
             ))}
           </div>
         </div>
@@ -367,8 +335,8 @@ export default function Landing() {
                 <li>{Check()}Autocrop basique 9:16 / 16:9</li>
                 <li className="off">{Check()}Enhance IA</li>
               </ul>
-              <SignInButton mode="modal">
-                <button className="btn btn-ghost">Commencer</button>
+              <SignInButton mode="modal" forceRedirectUrl="/app/search">
+                <button type="button" className="btn btn-ghost">Commencer</button>
               </SignInButton>
             </div>
 
@@ -384,8 +352,8 @@ export default function Landing() {
                 <li>{Check()}Tous les modèles AI</li>
                 <li>{Check()}Hook Finder</li>
               </ul>
-              <SignInButton mode="modal">
-                <button className="btn btn-primary">Passer Creator</button>
+              <SignInButton mode="modal" forceRedirectUrl="/app/billing">
+                <button type="button" className="btn btn-primary">Passer Creator</button>
               </SignInButton>
             </div>
 
@@ -400,8 +368,8 @@ export default function Landing() {
                 <li>{Check()}Accès API</li>
                 <li>{Check()}Support prioritaire</li>
               </ul>
-              <SignInButton mode="modal">
-                <button className="btn btn-ghost">Passer Pro</button>
+              <SignInButton mode="modal" forceRedirectUrl="/app/billing">
+                <button type="button" className="btn btn-ghost">Passer Pro</button>
               </SignInButton>
             </div>
           </div>
@@ -414,8 +382,8 @@ export default function Landing() {
           <div className="cta">
             <h2>Ton prochain édit viral<br />commence ici.</h2>
             <p>Premier export 4K offert. Pas de carte. Pas d'excuse.</p>
-            <SignInButton mode="modal">
-              <button className="btn btn-primary btn-lg">Miner mon premier clip →</button>
+            <SignInButton mode="modal" forceRedirectUrl="/app/search">
+              <button type="button" className="btn btn-primary btn-lg">Miner mon premier clip →</button>
             </SignInButton>
           </div>
         </div>
