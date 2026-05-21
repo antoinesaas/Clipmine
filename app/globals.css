@@ -685,6 +685,18 @@ footer {
 }
 
 /* === LEGAL PAGES === */
+.legal-main { padding: 110px 0 80px; }
+.legal-head { margin-bottom: 48px; }
+.legal-h1 {
+  font-family: var(--display); font-size: clamp(32px, 5vw, 52px);
+  font-weight: 800; letter-spacing: -0.035em;
+  margin: 12px 0 12px; color: var(--txt);
+}
+.legal-date { color: var(--mut); font-size: 13px; font-family: var(--mono); }
+.legal-note { color: var(--dim); font-size: 13px; font-style: italic; }
+.legal-foot-links { display: flex; gap: 24px; flex-wrap: wrap; }
+.legal-foot-links a { color: var(--mut); font-size: 14px; }
+.legal-foot-links a:hover { color: var(--txt); }
 .legal-body { color: var(--mut); line-height: 1.75; font-size: 15px; }
 .legal-body section { margin-bottom: 36px; padding-bottom: 36px; border-bottom: 1px solid var(--line); }
 .legal-body section:last-child { border-bottom: none; }
