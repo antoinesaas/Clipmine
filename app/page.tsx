@@ -3,257 +3,470 @@
 import { useEffect, useState } from "react";
 import { SignedIn, SignedOut, SignInButton, UserButton } from "@clerk/nextjs";
 import Link from "next/link";
+import { DEMO_CLIPS, thumbForId } from "@/lib/demo-clips";
 
-const GRADS = [
-  "linear-gradient(135deg,#1e3a8a,#0ea5e9)", "linear-gradient(135deg,#7c2d12,#f59e0b)",
-  "linear-gradient(135deg,#581c87,#ec4899)", "linear-gradient(135deg,#064e3b,#10b981)",
-  "linear-gradient(135deg,#1e1b4b,#6366f1)", "linear-gradient(135deg,#7f1d1d,#ef4444)",
-  "linear-gradient(135deg,#0c4a6e,#22d3ee)", "linear-gradient(135deg,#3b0764,#a855f7)",
-  "linear-gradient(135deg,#422006,#eab308)", "linear-gradient(135deg,#134e4a,#2dd4bf)",
-];
-const rg = () => GRADS[Math.floor(Math.random() * GRADS.length)];
-const Check = () => (<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="m5 12 5 5L20 7" /></svg>);
-const Cross = () => (<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M6 6l12 12M18 6 6 18" /></svg>);
+type Result = {
+  youtubeId: string; title: string; channel: string;
+  thumb?: string; views: number; viralScore: number; direct?: boolean;
+};
 
 const CHIPS = [
-  ["🚗 Cars", "voiture luxe nuit"], ["🔥 Motivation", "motivation discours"],
-  ["⚔️ Anime", "anime fight scene 4k"], ["🌍 Nature", "nature drone cinematic"],
-  ["💪 Gym", "gym workout"],
+  ["🚗 Supercars", "supercar drone 4k"],
+  ["🔥 Motivation", "motivation speech"],
+  ["⚔️ Anime", "anime 4k amv"],
+  ["🌍 Cinematic", "cinematic nature 4k"],
+  ["💪 Workout", "gym aesthetic"],
 ];
 
-const FEATURES = [
-  { hot: true, tag: "EXCLUSIF", title: "Hook Finder IA", desc: "L'IA repère les 1 à 3 secondes les plus accrocheuses de chaque clip — le moment parfait pour ouvrir ton édit.", icon: <path d="M13 2 3 14h9l-1 8 10-12h-9z" /> },
-  { hot: true, tag: "EXCLUSIF", title: "Trend Radar", desc: "Vois en temps réel quels types de clips explosent par niche, pour sourcer la bonne matière avant tout le monde.", icon: <><path d="M3 3v18h18" /><path d="m7 14 4-4 4 4 4-6" /></> },
-  { title: "Autocrop intelligent", desc: "Détection du sujet (visage, action, voiture) et recadrage auto en 9:16, 16:9 ou 4:3 avec tracking fluide.", icon: <><path d="M6 3v18M3 6h3M18 3v18M21 18h-3" /><rect x="6" y="6" width="12" height="12" rx="1" /></> },
-  { title: "Enhance & 60fps", desc: "Upscale qualité, stabilisation, débruitage et interpolation 24→60fps. Des clips sources nets et fluides.", icon: <path d="m12 3 1.9 5.8L20 9l-5 3.6L17 19l-5-3.5L7 19l2-6.4L4 9l6.1-.2z" /> },
-  { title: "Téléchargement 4K", desc: "La meilleure qualité source disponible, jusqu'en 4K. Pas de watermark, pas de compression dégueulasse.", icon: <><path d="M21 15V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v9" /><path d="M12 17V8m-4 5 4 4 4-4" /></> },
-  { title: "Bibliothèque perso", desc: "Sauvegarde tes clips par projet, retrouve ton historique, réutilise ta matière. Tout synchronisé.", icon: <><path d="M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20z" /><path d="M12 8v8M8 12h8" /></> },
+const MODELS = [
+  { name: "Starlight", tag: "EXCLUSIF", title: "Upscale jusqu'à 4K", desc: "Notre modèle phare. Reconstruit chaque pixel avec une précision cinématographique. Idéal pour les vieux clips YouTube en 480p ou 720p.", icon: <><path d="M12 2v6M12 16v6M4.93 4.93l4.24 4.24M14.83 14.83l4.24 4.24M2 12h6M16 12h6M4.93 19.07l4.24-4.24M14.83 9.17l4.24-4.24"/></> },
+  { name: "Proteus", tag: "AI", title: "Enhance intelligent", desc: "Détecte automatiquement les imperfections, rétablit la netteté et révèle les détails que l'encodage YouTube a écrasés.", icon: <><circle cx="12" cy="12" r="3"/><path d="M12 1v6m0 10v6M4.22 4.22l4.24 4.24m7.08 7.08 4.24 4.24M1 12h6m10 0h6M4.22 19.78l4.24-4.24m7.08-7.08 4.24-4.24"/></> },
+  { name: "Nyx", tag: "AI", title: "Denoise nocturne", desc: "Élimine le bruit numérique sur les scènes sombres sans détruire le grain cinéma. Pour les clips low-light et les concerts.", icon: <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/> },
+  { name: "Aion", tag: "AI", title: "Interpolation 60fps", desc: "Crée des frames intermédiaires pour fluidifier n'importe quel clip. Transforme 24fps en 60 ou 120fps sans artefact.", icon: <><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></> },
+  { name: "Chronos", tag: "AI", title: "Slow-motion fluide", desc: "Ralenti cinématographique généré par IA. Étire le temps tout en gardant la fluidité d'un tournage à 240fps natif.", icon: <><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></> },
+  { name: "Themis", tag: "AI", title: "Stabilisation pro", desc: "Compense les tremblements caméra a posteriori. Donne à n'importe quel clip un rendu gimbal pro.", icon: <><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></> },
 ];
 
-const DEMOS = ["Cars edit", "Motivation", "Anime AMV", "Nature 4K"];
-
-type Result = { youtubeId: string; title: string; channel: string; thumb?: string; views: number; viralScore: number; bg?: string };
+const USECASES = [
+  { title: "Éditeurs TikTok / Reels", desc: "Sourcing rapide de matière première viral-ready, recadrée en 9:16." },
+  { title: "Créateurs YouTube", desc: "Upscale tes archives, remasterise tes anciennes vidéos en 4K." },
+  { title: "Agences & Studios", desc: "Workflow B-roll industriel, batch processing, accès API." },
+  { title: "Archivistes & Passionnés", desc: "Restaure des films de famille, des VHS, des archives historiques." },
+];
 
 function isYoutubeUrl(s: string) {
   return /(?:youtube\.com\/|youtu\.be\/)/.test(s);
 }
 
 export default function Landing() {
-  const [bgRows, setBgRows] = useState<string[][]>([]);
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<Result[] | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    setBgRows([0, 1, 2].map(() => Array.from({ length: 24 }, rg)));
-  }, []);
+  const [comparePos, setComparePos] = useState(50);
 
   async function runSearch(q?: string) {
     const term = (q ?? query).trim();
     if (!term) return;
-    setQuery(term);
-    setLoading(true);
-    setResults([]);
-    setError(null);
+    setQuery(term); setLoading(true); setResults([]); setError(null);
     try {
       const r = await fetch(`/api/search?q=${encodeURIComponent(term)}`);
       const data = await r.json();
       if (!r.ok) {
-        setError(data.message ?? "Une erreur est survenue. Vérifie ta clé YouTube API.");
-        setResults([]);
+        setError(data.message ?? "Une erreur est survenue.");
         return;
       }
       if (!data.results?.length) {
-        setError("Aucun résultat trouvé. Essaie un autre mot-clé ou colle un lien YouTube.");
-        setResults([]);
+        setError("Aucun résultat. Essaie un autre mot-clé ou colle un lien YouTube.");
         return;
       }
-      setResults(data.results.map((x: Result) => ({ ...x, bg: rg() })));
+      setResults(data.results);
     } catch {
-      setError("Erreur réseau. Réessaie dans quelques instants.");
-      setResults([]);
+      setError("Erreur réseau. Réessaie.");
     } finally {
       setLoading(false);
     }
+  }
+
+  function handleCompareMove(e: React.MouseEvent<HTMLDivElement>) {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width) * 100;
+    setComparePos(Math.max(0, Math.min(100, x)));
   }
 
   return (
     <>
       <nav>
         <div className="nav-in">
-          <div className="logo"><span className="dot" />Clip<span className="b">Mine</span></div>
+          <Link href="/" className="logo">
+            <span className="dot" />Clip<span className="b">Mine</span>
+          </Link>
           <div className="nav-links">
-            <a href="#features">Fonctions</a>
+            <a href="#models">Modèles AI</a>
             <a href="#demos">Démos</a>
             <a href="#pricing">Tarifs</a>
+            <Link href="/upscale">Upscale</Link>
             <SignedOut><SignInButton mode="modal"><a>Connexion</a></SignInButton></SignedOut>
             <SignedIn><Link href="/app">Mon espace</Link></SignedIn>
           </div>
           <SignedOut>
-            <SignInButton mode="modal"><button className="btn btn-primary">Essayer gratuitement</button></SignInButton>
+            <SignInButton mode="modal">
+              <button className="btn btn-primary">Essayer gratuitement</button>
+            </SignInButton>
           </SignedOut>
           <SignedIn><UserButton afterSignOutUrl="/" /></SignedIn>
         </div>
       </nav>
 
       <header className="hero">
-        <div className="clip-bg">
-          {bgRows.map((row, i) => (
-            <div key={i} className={`clip-row r${i + 1}`}>
-              {[...row, ...row].map((g, j) => (<div key={j} className="clip-thumb" style={{ background: g }} />))}
-            </div>
-          ))}
-        </div>
-        <div className="hero-fade" />
+        <div className="hero-grid" />
+        <div className="hero-glow" />
         <div className="hero-in wrap">
-          <div className="badge"><span className="pulse" />1 téléchargement 4K offert · sans carte</div>
-          <h1>Trouve le clip parfait.<br /><span className="grad">Mine la matière de tes édits.</span></h1>
-          <p className="sub">Tape ce que tu veux. ClipMine scanne tout YouTube, classe les meilleurs clips par potentiel viral, et te les sort recadrés et améliorés — prêts à importer dans ton montage.</p>
+          <div className="badge">
+            <span className="pulse" />CINEMATIC AI · UPSCALE · ENHANCE · 4K
+          </div>
+          <h1>
+            Mine YouTube.<br />
+            <span className="grad">Cinema-grade clips, instantly.</span>
+          </h1>
+          <p className="sub">
+            Notre IA upscale, denoise et restore n'importe quel clip YouTube en qualité 4K cinéma.
+            Recadrage automatique 9:16 / 16:9 / 4:3. La matière première de tes édits, prête en quelques secondes.
+          </p>
 
           <div className="search-box">
             <div className="search-shell">
-              {isYoutubeUrl(query)
-                ? <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FF4444" strokeWidth="2"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.95-1.96C18.88 4 12 4 12 4s-6.88 0-8.59.46A2.78 2.78 0 0 0 1.46 6.42 29 29 0 0 0 1 12a29 29 0 0 0 .46 5.58 2.78 2.78 0 0 0 1.95 1.96C5.12 20 12 20 12 20s6.88 0 8.59-.46a2.78 2.78 0 0 0 1.96-1.96A29 29 0 0 0 23 12a29 29 0 0 0-.46-5.58z" /><polygon points="9.75 15.02 15.5 12 9.75 8.98 9.75 15.02" fill="#FF4444" stroke="none" /></svg>
-                : <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="7" /><path d="m21 21-4.3-4.3" /></svg>
-              }
-              <input className="search-input" value={query} onChange={(e) => setQuery(e.target.value)}
+              {isYoutubeUrl(query) ? (
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FF4444" strokeWidth="2">
+                  <path d="M22.54 6.42a2.78 2.78 0 0 0-1.95-1.96C18.88 4 12 4 12 4s-6.88 0-8.59.46A2.78 2.78 0 0 0 1.46 6.42 29 29 0 0 0 1 12a29 29 0 0 0 .46 5.58 2.78 2.78 0 0 0 1.95 1.96C5.12 20 12 20 12 20s6.88 0 8.59-.46a2.78 2.78 0 0 0 1.96-1.96A29 29 0 0 0 23 12a29 29 0 0 0-.46-5.58z" />
+                  <polygon points="9.75 15.02 15.5 12 9.75 8.98 9.75 15.02" fill="#FF4444" stroke="none" />
+                </svg>
+              ) : (
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <circle cx="11" cy="11" r="7" /><path d="m21 21-4.3-4.3" />
+                </svg>
+              )}
+              <input
+                className="search-input"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && runSearch()}
-                placeholder="Mots-clés ou colle un lien YouTube directement..." />
-              <button className="btn btn-primary" onClick={() => runSearch()}>Miner</button>
+                placeholder="Mots-clés ou colle un lien YouTube..."
+              />
+              <button className="btn btn-primary" onClick={() => runSearch()}>
+                Mine →
+              </button>
             </div>
             <div className="chips">
-              {CHIPS.map(([label, q]) => (<span key={q} className="chip" onClick={() => runSearch(q)}>{label}</span>))}
+              {CHIPS.map(([label, q]) => (
+                <span key={q} className="chip" onClick={() => runSearch(q)}>{label}</span>
+              ))}
             </div>
-            <div className="hero-note">Résultats en <b>4K source</b> · lien YouTube direct accepté · autocrop 9:16 / 16:9 / 4:3</div>
+            <div className="hero-note">
+              Résultats en <b>4K source</b> · lien YouTube direct accepté · enhance IA inclus
+            </div>
           </div>
 
           {error && !loading && (
-            <div style={{ maxWidth: 660, margin: "20px auto 0", background: "rgba(239,68,68,.1)", border: "1px solid rgba(239,68,68,.3)", borderRadius: 12, padding: "14px 18px", color: "#F87171", fontSize: 14, textAlign: "center" }}>
-              ⚠️ {error}
-            </div>
+            <div className="search-error">⚠️ {error}</div>
           )}
 
           {(loading || (results && results.length > 0)) && (
-            <div className="results">
+            <div className="results-wrap">
               <div className="res-head">
                 <h3>Résultats {query && `pour « ${query} »`}</h3>
-                <div className="filters"><span className="fpill on">9:16</span><span className="fpill">16:9</span><span className="fpill">4K</span></div>
+                <div className="filters">
+                  <span className="fpill on">9:16</span>
+                  <span className="fpill">16:9</span>
+                  <span className="fpill">4K</span>
+                </div>
               </div>
               <div className="res-grid">
                 {loading
-                  ? Array.from({ length: 8 }).map((_, i) => (<div key={i} className="res-card"><div className="skeleton" /></div>))
+                  ? Array.from({ length: 8 }).map((_, i) => (
+                      <div key={i} className="res-card"><div className="skeleton" /></div>
+                    ))
                   : results!.map((r) => (
-                    <SignInButton key={r.youtubeId} mode="modal">
-                      <div className="res-card">
-                        <div className="res-thumb" style={{ background: r.bg, backgroundImage: r.thumb ? `url(${r.thumb})` : undefined }}>
-                          <span className="score">🔥 {r.viralScore}</span>
-                          <span className="dur">4K</span>
+                      <SignInButton key={r.youtubeId} mode="modal">
+                        <div className="res-card">
+                          <div
+                            className="res-thumb"
+                            style={{ backgroundImage: r.thumb ? `url(${r.thumb})` : undefined }}
+                          >
+                            <span className="score">🔥 {r.viralScore}</span>
+                            <span className="dur">4K</span>
+                          </div>
+                          <div className="res-body">
+                            <div className="t">{r.title}</div>
+                            <div className="m">
+                              {r.views > 0 ? `${(r.views / 1e6).toFixed(1)}M vues · ` : ""}
+                              {r.channel}
+                            </div>
+                          </div>
                         </div>
-                        <div className="res-body">
-                          <div className="t">{r.title}</div>
-                          <div className="m">{(r.views / 1e6).toFixed(1)}M vues · {r.channel}</div>
-                        </div>
-                      </div>
-                    </SignInButton>
-                  ))}
+                      </SignInButton>
+                    ))}
               </div>
             </div>
           )}
         </div>
+
+        <div className="models-row">
+          {["Upscale", "Denoise", "Restore", "Stabilize", "Slow-Mo", "Interpolate"].map((m, i) => (
+            <div key={m} className="model-pill">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+              {m}
+            </div>
+          ))}
+        </div>
       </header>
 
-      <section id="features">
+      {/* TRUSTED BY */}
+      <div className="trusted">
         <div className="wrap">
-          <div className="eyebrow">Pourquoi ClipMine</div>
-          <h2 className="h2">Tout ce que les autres ne font pas</h2>
-          <p className="sec-sub">Pensé pour les éditeurs TikTok, Reels et Shorts. De la recherche à l'export, en un seul endroit.</p>
-          <div className="feat-grid">
-            {FEATURES.map((f) => (
-              <div key={f.title} className={`feat ${f.hot ? "hot" : ""}`}>
-                {f.tag && <span className="tag">{f.tag}</span>}
-                <div className="ic"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">{f.icon}</svg></div>
-                <h3>{f.title}</h3><p>{f.desc}</p>
+          <div className="trusted-label">Utilisé par les créateurs de</div>
+          <div className="trusted-logos">
+            <span>TikTok Edits</span>
+            <span>Reels Pros</span>
+            <span>YouTube Shorts</span>
+            <span>Agences Sociales</span>
+            <span>Vidéastes Indé</span>
+          </div>
+        </div>
+      </div>
+
+      {/* MODELS AI */}
+      <section id="models">
+        <div className="wrap">
+          <div className="eyebrow">Powered by AI</div>
+          <h2 className="h2">Plus de 6 modèles AI dédiés.</h2>
+          <p className="sec-sub">
+            Chaque modèle est entraîné sur une tâche précise. Upscale, denoise, stabilisation, slow-mo —
+            on enchaîne ce qu'il faut pour transformer un clip YouTube médiocre en source cinéma.
+          </p>
+
+          <div className="models-grid">
+            {MODELS.map((m, i) => (
+              <div key={m.name} className={`model-card ${i < 2 ? "feat" : ""}`}>
+                <span className="tag">{m.tag}</span>
+                <div className="ic">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    {m.icon}
+                  </svg>
+                </div>
+                <h3>{m.name}</h3>
+                <p style={{ marginBottom: 14 }}>{m.title}</p>
+                <p style={{ fontSize: 14, color: "var(--dim)" }}>{m.desc}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      <section id="demos" style={{ background: "var(--bg2)" }}>
+      {/* BEFORE / AFTER */}
+      <section style={{ background: "var(--bg-elev)", paddingTop: 90 }}>
+        <div className="wrap">
+          <div className="eyebrow">Comparateur</div>
+          <h2 className="h2">Avant YouTube. Après ClipMine.</h2>
+          <p className="sec-sub">
+            Glisse le curseur pour comparer le clip source compressé YouTube à la version ClipMine 4K upscalée.
+          </p>
+
+          <div
+            className="compare-wrap"
+            onMouseMove={handleCompareMove}
+            onTouchMove={(e) => {
+              const t = e.touches[0];
+              const rect = (e.currentTarget as HTMLDivElement).getBoundingClientRect();
+              const x = ((t.clientX - rect.left) / rect.width) * 100;
+              setComparePos(Math.max(0, Math.min(100, x)));
+            }}
+          >
+            <div className="compare">
+              <div
+                className="compare-img"
+                style={{
+                  backgroundImage: `url(${thumbForId(DEMO_CLIPS[0].youtubeId)})`,
+                  filter: "blur(2px) brightness(0.85) saturate(0.7)",
+                }}
+              />
+              <div
+                className="compare-img after"
+                style={{
+                  backgroundImage: `url(${thumbForId(DEMO_CLIPS[0].youtubeId)})`,
+                  clipPath: `inset(0 0 0 ${comparePos}%)`,
+                  filter: "saturate(1.15) contrast(1.05)",
+                }}
+              />
+              <div className="compare-label left">Source YouTube</div>
+              <div className="compare-label right">ClipMine 4K</div>
+              <div className="compare-handle" style={{ left: `${comparePos}%` }} />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* DEMOS - VRAIS CLIPS YOUTUBE */}
+      <section id="demos">
         <div className="wrap">
           <div className="eyebrow">En action</div>
-          <h2 className="h2">Des clips minés, prêts à monter</h2>
-          <p className="sec-sub">Des vrais clips sourcés et recadrés avec ClipMine. Tes démos arrivent ici.</p>
+          <h2 className="h2">Des clips réels, minés par ClipMine.</h2>
+          <p className="sec-sub">
+            Voici quelques-uns des clips les plus viraux de tous les temps. Clique pour voir comment
+            on les upscale et les recadre en 9:16, prêts pour ton prochain édit.
+          </p>
+
           <div className="demo-grid">
-            {DEMOS.map((l, i) => (
-              <div key={i} className="demo" style={{ background: rg() }}>
-                <span className="slot">TA DÉMO</span>
-                <div className="play"><svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M8 5v14l11-7z" /></svg></div>
-                <div className="lbl">{l}</div>
-                {/* <video src={`/demos/${i}.mp4`} muted loop playsInline autoPlay /> */}
+            {DEMO_CLIPS.slice(0, 8).map((c) => (
+              <SignInButton key={c.youtubeId} mode="modal">
+                <div
+                  className="demo"
+                  style={{ backgroundImage: `url(${thumbForId(c.youtubeId)})` }}
+                >
+                  <span className="badge-4k">4K · 9:16</span>
+                  <div className="play">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="white">
+                      <path d="M8 5v14l11-7z" />
+                    </svg>
+                  </div>
+                  <div className="lbl">{c.title}</div>
+                </div>
+              </SignInButton>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* USE CASES */}
+      <section style={{ background: "var(--bg-elev)" }}>
+        <div className="wrap">
+          <div className="eyebrow">Pour qui ?</div>
+          <h2 className="h2">Tu es créateur. ClipMine est pour toi.</h2>
+          <p className="sec-sub">
+            De l'éditeur TikTok solo aux studios qui produisent en masse, ClipMine s'intègre à ton workflow.
+          </p>
+
+          <div className="usecase-grid">
+            {USECASES.map((u) => (
+              <div key={u.title} className="usecase">
+                <div className="check">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                </div>
+                <h4>{u.title}</h4>
+                <p>{u.desc}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
+      {/* PRICING */}
       <section id="pricing">
         <div className="wrap">
           <div className="eyebrow">Tarifs</div>
-          <h2 className="h2">Commence gratuit. Scale quand tu veux.</h2>
-          <p className="sec-sub">Ton premier export 4K est offert. Ensuite, choisis ton plan.</p>
+          <h2 className="h2">Gratuit pour démarrer.<br />Scalable quand tu veux.</h2>
+          <p className="sec-sub">
+            Premier export 4K offert. Pas de carte. Choisis ton plan ensuite.
+          </p>
+
           <div className="price-grid">
             <div className="plan">
-              <h3>Free</h3><p className="pdesc">Pour tester la magie</p><div className="price">0€</div>
+              <h3>Free</h3>
+              <p className="pdesc">Pour tester la magie</p>
+              <div className="price">0€</div>
               <ul>
-                <li><Check />Recherches illimitées</li>
-                <li><Check /><b style={{ color: "var(--teal)" }}>1 export 4K offert</b></li>
-                <li><Check />Autocrop basique</li>
-                <li className="off"><Cross />Enhance IA</li>
+                <li>{Check()}Recherches illimitées</li>
+                <li>{Check()}<b>1 export 4K offert</b></li>
+                <li>{Check()}Autocrop basique 9:16 / 16:9</li>
+                <li className="off">{Check()}Enhance IA</li>
               </ul>
-              <SignInButton mode="modal"><button className="btn btn-ghost">Commencer</button></SignInButton>
+              <SignInButton mode="modal">
+                <button className="btn btn-ghost">Commencer</button>
+              </SignInButton>
             </div>
+
             <div className="plan feat-plan">
               <div className="pop">Le plus populaire</div>
-              <h3>Creator</h3><p className="pdesc">Pour les éditeurs actifs</p><div className="price">9€<small>/mois</small></div>
+              <h3>Creator</h3>
+              <p className="pdesc">Pour les éditeurs actifs</p>
+              <div className="price">9€<small>/mois</small></div>
               <ul>
-                <li><Check />Tout du Free</li><li><Check />50 exports 4K / mois</li>
-                <li><Check />Enhance IA + 60fps</li><li><Check />Hook Finder</li>
+                <li>{Check()}Tout du plan Free</li>
+                <li>{Check()}<b>50 exports 4K / mois</b></li>
+                <li>{Check()}Enhance IA + 60fps</li>
+                <li>{Check()}Tous les modèles AI</li>
+                <li>{Check()}Hook Finder</li>
               </ul>
-              <SignInButton mode="modal"><button className="btn btn-primary">Passer Creator</button></SignInButton>
+              <SignInButton mode="modal">
+                <button className="btn btn-primary">Passer Creator</button>
+              </SignInButton>
             </div>
+
             <div className="plan">
-              <h3>Pro</h3><p className="pdesc">Pour les agences</p><div className="price">24€<small>/mois</small></div>
+              <h3>Pro</h3>
+              <p className="pdesc">Pour les agences & studios</p>
+              <div className="price">24€<small>/mois</small></div>
               <ul>
-                <li><Check />Tout du Creator</li><li><Check />Exports illimités</li>
-                <li><Check />B-roll IA + Trend Radar</li><li><Check />Accès API</li>
+                <li>{Check()}Tout du plan Creator</li>
+                <li>{Check()}<b>Exports illimités</b></li>
+                <li>{Check()}Trend Radar</li>
+                <li>{Check()}Accès API</li>
+                <li>{Check()}Support prioritaire</li>
               </ul>
-              <SignInButton mode="modal"><button className="btn btn-ghost">Passer Pro</button></SignInButton>
+              <SignInButton mode="modal">
+                <button className="btn btn-ghost">Passer Pro</button>
+              </SignInButton>
             </div>
           </div>
         </div>
       </section>
 
+      {/* FINAL CTA */}
       <section style={{ paddingTop: 0 }}>
         <div className="wrap">
           <div className="cta">
-            <h2>Ton prochain édit viral commence ici.</h2>
+            <h2>Ton prochain édit viral<br />commence ici.</h2>
             <p>Premier export 4K offert. Pas de carte. Pas d'excuse.</p>
-            <SignInButton mode="modal"><button className="btn btn-primary" style={{ padding: "15px 32px", fontSize: 16 }}>Miner mon premier clip</button></SignInButton>
+            <SignInButton mode="modal">
+              <button className="btn btn-primary btn-lg">Miner mon premier clip →</button>
+            </SignInButton>
           </div>
         </div>
       </section>
 
+      {/* FOOTER */}
       <footer>
-        <div className="wrap">
-          <div className="foot-in">
-            <div className="logo"><span className="dot" />Clip<span className="b">Mine</span></div>
-            <div className="foot-links"><a href="#features">Fonctions</a><a href="#pricing">Tarifs</a><Link href="/cgu">CGU</Link><Link href="/mentions-legales">Mentions légales</Link><a href="mailto:contact@clipmine.fr">Contact</a></div>
+        <div className="foot-grid">
+          <div className="foot-col">
+            <Link href="/" className="logo">
+              <span className="dot" />Clip<span className="b">Mine</span>
+            </Link>
+            <p className="foot-tagline">
+              Cinema-grade AI video enhancement. La matière première de tes édits, minée et upscalée en secondes.
+            </p>
           </div>
-          <p className="legal">ClipMine est un outil de recherche et de traitement vidéo. L'utilisateur est seul responsable de l'usage des contenus téléchargés et du respect des droits d'auteur applicables. © 2026 ClipMine.</p>
+          <div className="foot-col">
+            <h4>Produit</h4>
+            <ul>
+              <li><a href="#models">Modèles AI</a></li>
+              <li><Link href="/upscale">Upscale</Link></li>
+              <li><a href="#pricing">Tarifs</a></li>
+              <li><a href="#demos">Démos</a></li>
+            </ul>
+          </div>
+          <div className="foot-col">
+            <h4>Société</h4>
+            <ul>
+              <li><a href="mailto:contact@clipmine.fr">Contact</a></li>
+              <li><Link href="/cgu">CGU</Link></li>
+              <li><Link href="/mentions-legales">Mentions légales</Link></li>
+            </ul>
+          </div>
+          <div className="foot-col">
+            <h4>Ressources</h4>
+            <ul>
+              <li><a href="https://github.com/antoinesaas/Clipmine" target="_blank" rel="noopener noreferrer">GitHub</a></li>
+              <li><a href="mailto:contact@clipmine.fr">Support</a></li>
+            </ul>
+          </div>
+        </div>
+        <div className="foot-bottom">
+          <p>© 2026 ClipMine. Tous droits réservés.</p>
+          <p>L'utilisateur est seul responsable du respect des droits d'auteur des contenus téléchargés.</p>
         </div>
       </footer>
     </>
+  );
+}
+
+function Check() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+      <polyline points="20 6 9 17 4 12" />
+    </svg>
   );
 }

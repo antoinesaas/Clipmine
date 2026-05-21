@@ -140,32 +140,16 @@ export default function MentionsLegales() {
       </main>
 
       <footer>
-        <div className="wrap">
-          <div className="foot-in">
-            <div className="logo"><span className="dot" />Clip<span className="b">Mine</span></div>
-            <div className="foot-links">
-              <Link href="/#features">Fonctions</Link>
-              <Link href="/#pricing">Tarifs</Link>
-              <Link href="/cgu">CGU</Link>
-              <Link href="/mentions-legales">Mentions légales</Link>
-            </div>
+        <div className="foot-bottom" style={{ paddingTop: 0, borderTop: "none" }}>
+          <div className="logo"><span className="dot" />Clip<span className="b">Mine</span></div>
+          <div style={{ display: "flex", gap: 24, flexWrap: "wrap" }}>
+            <Link href="/#models" style={{ color: "var(--mut)" }}>Modèles AI</Link>
+            <Link href="/#pricing" style={{ color: "var(--mut)" }}>Tarifs</Link>
+            <Link href="/cgu" style={{ color: "var(--mut)" }}>CGU</Link>
+            <Link href="/mentions-legales" style={{ color: "var(--mut)" }}>Mentions légales</Link>
           </div>
-          <p className="legal">© 2026 ClipMine. Tous droits réservés.</p>
+          <p>© 2026 ClipMine</p>
         </div>
-      </footer>
-
-      <style>{`
-        .legal-body { color: var(--mut); line-height: 1.75; font-size: 15px; }
-        .legal-body section { margin-bottom: 36px; padding-bottom: 36px; border-bottom: 1px solid var(--line); }
-        .legal-body section:last-child { border-bottom: none; }
-        .legal-body h2 { font-family: var(--display); font-size: 20px; font-weight: 700; color: var(--txt); margin-bottom: 14px; letter-spacing: -.02em; }
-        .legal-body h3 { font-size: 15px; font-weight: 600; color: var(--txt); margin: 18px 0 8px; }
-        .legal-body p { margin-bottom: 12px; }
-        .legal-body ul { padding-left: 20px; margin-bottom: 12px; }
-        .legal-body li { margin-bottom: 6px; }
-        .legal-body strong { color: var(--txt); font-weight: 600; }
-        .legal-body a { color: var(--blue2); text-decoration: underline; text-underline-offset: 3px; }
-      `}</style>
     </>
   );
 }

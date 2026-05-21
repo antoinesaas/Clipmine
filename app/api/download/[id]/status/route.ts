@@ -1,14 +1,19 @@
-import { NextResponse } from "next/server";
-import { auth } from "@clerk/nextjs/server";
-import { prisma } from "@/lib/prisma";
+import { NextRequest, NextResponse } from "next/server";
+import { prisma, hasDatabase } from "@/lib/prisma";
 
 // GET /api/download/[id]/status
-export async function GET(_req: Request, { params }: { params: { id: string } }) {
-  const { userId } = auth();
-  if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+export async function GET(_req: NextRequest, { params }: { params: { id: string } }) {
+  if (!hasDatabase || params.id.startsWith("waitlist-") || params.id.startsWith("error-")) {
+    return NextResponse.json({ status: "queued", waitlist: true });
+  }
 
-  const dl = await prisma.download.findUnique({ where: { id: params.id } });
-  if (!dl) return NextResponse.json({ error: "not_found" }, { status: 404 });
-
-  return NextResponse.json({ status: dl.status, fileUrl: dl.fileUrl });
+  try {
+    const dl = await prisma.download.findUnique({ where: { id: params.id } });
+    if (!dl) return NextResponse.json({ error: "not_found" }, { status: 404 });
+    return NextResponse.json({ status: dl.status, fileUrl: dl.fileUrl });
+  } catch {
+    return NextResponse.json({ status: "queued", waitlist: true });
+  }
 }
+
+export const dynamic = "force-dynamic";
