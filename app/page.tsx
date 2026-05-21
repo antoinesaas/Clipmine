@@ -85,7 +85,10 @@ export default function Landing() {
           </div>
           <SignedOut>
             <SignInButton mode="modal">
-              <button className="btn btn-primary">Essayer gratuitement</button>
+              <button type="button" className="btn btn-primary btn-nav-cta">
+                <span className="only-desktop">Essayer gratuitement</span>
+                <span className="only-mobile">Essayer</span>
+              </button>
             </SignInButton>
           </SignedOut>
           <SignedIn><UserButton afterSignOutUrl="/" /></SignedIn>
@@ -236,14 +239,14 @@ export default function Landing() {
               <div
                 className="compare-img"
                 style={{
-                  backgroundImage: `url(${thumbForId(DEMO_CLIPS[0].youtubeId)})`,
+                  backgroundImage: `url(${thumbForId(DEMO_CLIPS[1].youtubeId)})`,
                   filter: "blur(2px) brightness(0.85) saturate(0.7)",
                 }}
               />
               <div
                 className="compare-img after"
                 style={{
-                  backgroundImage: `url(${thumbForId(DEMO_CLIPS[0].youtubeId)})`,
+                  backgroundImage: `url(${thumbForId(DEMO_CLIPS[1].youtubeId)})`,
                   clipPath: `inset(0 0 0 ${comparePos}%)`,
                   filter: "saturate(1.15) contrast(1.05)",
                 }}

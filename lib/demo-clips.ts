@@ -1,4 +1,4 @@
-// Scènes films & séries 4K — IDs YouTube vérifiés (trailers/scènes officielles)
+// Scènes films & séries 4K — IDs YouTube vérifiés (thumbnails 200 OK)
 
 import type { MediaType } from "./film-filter";
 
@@ -13,27 +13,27 @@ export type DemoClip = {
   duration: string;
   type: MediaType;
   tags: string[];
-  /** Réplique / transcription affichée sur la carte */
   transcript: string;
   is4K?: boolean;
 };
 
 export const DEMO_CLIPS: DemoClip[] = [
-  { youtubeId: "CPh5lJ5aZqk", title: "Inception", scene: "Dream Is Collapsing", movie: "Inception", channel: "Warner Bros.", views: 42_000_000, viralScore: 98, duration: "PT2M30S", type: "film", is4K: true, tags: ["inception", "dream", "4k", "scene", "nolan"], transcript: "You mustn't be afraid to dream a little bigger, darling." },
-  { youtubeId: "zSWdZVtXT7E", title: "Interstellar", scene: "Docking Maneuver", movie: "Interstellar", channel: "Warner Bros.", views: 38_000_000, viralScore: 97, duration: "PT2M28S", type: "film", is4K: true, tags: ["interstellar", "space", "docking", "4k", "nolan"], transcript: "Do not go gentle into that good night." },
-  { youtubeId: "uYPbbissJHA", title: "Oppenheimer", scene: "Trinity Test", movie: "Oppenheimer", channel: "Universal Pictures", views: 25_000_000, viralScore: 96, duration: "PT3M10S", type: "film", is4K: true, tags: ["oppenheimer", "4k", "scene", "nolan"], transcript: "Now I am become Death, the destroyer of worlds." },
-  { youtubeId: "mqqft2x_Aa4", title: "The Batman", scene: "Batmobile Chase", movie: "The Batman", channel: "Warner Bros.", views: 18_000_000, viralScore: 94, duration: "PT2M45S", type: "film", is4K: true, tags: ["batman", "dark", "4k", "scene"], transcript: "I am vengeance." },
-  { youtubeId: "n9xhJrPxop0", title: "Dune", scene: "Desert Power", movie: "Dune", channel: "Warner Bros.", views: 22_000_000, viralScore: 95, duration: "PT3M00S", type: "film", is4K: true, tags: ["dune", "desert", "4k", "scene"], transcript: "Fear is the mind-killer." },
-  { youtubeId: "qEVUtrk8_B0", title: "John Wick 4", scene: "Arc de Triomphe Fight", movie: "John Wick: Chapter 4", channel: "Lionsgate", views: 15_000_000, viralScore: 93, duration: "PT2M20S", type: "film", is4K: true, tags: ["john wick", "fight", "4k", "action"], transcript: "Yeah, I'm thinking I'm back." },
-  { youtubeId: "VyHV0BRtdxo", title: "Harry Potter", scene: "Hogwarts First Day", movie: "Harry Potter", channel: "Warner Bros.", views: 12_000_000, viralScore: 91, duration: "PT2M15S", type: "film", is4K: true, tags: ["harry potter", "hogwarts", "4k", "magic"], transcript: "You're a wizard, Harry." },
-  { youtubeId: "s7EdQ4D51qc", title: "The Dark Knight", scene: "Joker Interrogation", movie: "The Dark Knight", channel: "Warner Bros.", views: 55_000_000, viralScore: 99, duration: "PT4M10S", type: "film", is4K: true, tags: ["dark knight", "joker", "batman", "4k"], transcript: "Why so serious?" },
-  { youtubeId: "WzID9_3LrpU", title: "Gladiator", scene: "Are You Not Entertained", movie: "Gladiator", channel: "Universal Pictures", views: 14_000_000, viralScore: 95, duration: "PT2M05S", type: "film", is4K: true, tags: ["gladiator", "arena", "4k"], transcript: "Are you not entertained?" },
-  { youtubeId: "Ty8jA6z_x00", title: "The Matrix", scene: "Bullet Time", movie: "The Matrix", channel: "Warner Bros.", views: 22_000_000, viralScore: 97, duration: "PT1M55S", type: "film", is4K: true, tags: ["matrix", "neo", "4k", "bullet time"], transcript: "I know kung fu." },
+  { youtubeId: "i9zjvUywVG8", title: "Inception", scene: "The Dream Collapses", movie: "Inception", channel: "Movieclips", views: 510_654, viralScore: 98, duration: "PT2M46S", type: "film", is4K: true, tags: ["inception", "dream", "4k", "scene", "nolan"], transcript: "Mal sabotages Cobb's mission." },
+  { youtubeId: "P2tfZksgEy4", title: "Inception", scene: "Hallway Fight 4K", movie: "Inception", channel: "4K HDR Media", views: 495_602, viralScore: 97, duration: "PT2M48S", type: "film", is4K: true, tags: ["inception", "hallway", "4k", "fight"], transcript: "Arthur's hallway fights — sourced from 4K Blu-ray." },
+  { youtubeId: "zSWdZVtXT7E", title: "Interstellar", scene: "Docking Maneuver", movie: "Interstellar", channel: "Warner Bros.", views: 38_000_000, viralScore: 97, duration: "PT2M28S", type: "film", is4K: true, tags: ["interstellar", "space", "docking", "4k"], transcript: "Do not go gentle into that good night." },
+  { youtubeId: "uRJQJcy3f8w", title: "Oppenheimer", scene: "Trinity Test 4K IMAX", movie: "Oppenheimer", channel: "IMAX", views: 2_500_000, viralScore: 96, duration: "PT3M00S", type: "film", is4K: true, tags: ["oppenheimer", "4k", "imax"], transcript: "Now I am become Death, the destroyer of worlds." },
+  { youtubeId: "mqqft2x_Aa4", title: "The Batman", scene: "Batmobile Chase", movie: "The Batman", channel: "Warner Bros.", views: 18_000_000, viralScore: 94, duration: "PT2M45S", type: "film", is4K: true, tags: ["batman", "dark", "4k"], transcript: "I am vengeance." },
+  { youtubeId: "BEO2D_hhXDs", title: "Dune", scene: "Paul vs Baron 4K", movie: "Dune: Part Two", channel: "4K Clips", views: 1_200_000, viralScore: 95, duration: "PT2M30S", type: "film", is4K: true, tags: ["dune", "desert", "4k"], transcript: "Fear is the mind-killer." },
+  { youtubeId: "cAIiF1DlFDs", title: "John Wick 4", scene: "Best Fights 4K", movie: "John Wick: Chapter 4", channel: "Action Clips", views: 3_500_000, viralScore: 93, duration: "PT3M00S", type: "film", is4K: true, tags: ["john wick", "fight", "4k"], transcript: "Yeah, I'm thinking I'm back." },
+  { youtubeId: "VyHV0BRtdxo", title: "Harry Potter", scene: "Hogwarts First Day", movie: "Harry Potter", channel: "Warner Bros.", views: 12_000_000, viralScore: 91, duration: "PT2M15S", type: "film", is4K: true, tags: ["harry potter", "hogwarts", "4k"], transcript: "You're a wizard, Harry." },
+  { youtubeId: "vetKTtM7YyU", title: "The Dark Knight", scene: "Bank Heist (Joker)", movie: "The Dark Knight", channel: "IMAX", views: 8_000_000, viralScore: 99, duration: "PT4M10S", type: "film", is4K: true, tags: ["dark knight", "joker", "4k"], transcript: "Why so serious?" },
+  { youtubeId: "0oG5tdcFiUk", title: "Gladiator", scene: "Arena Fight", movie: "Gladiator", channel: "Epic Scenes", views: 4_000_000, viralScore: 95, duration: "PT2M30S", type: "film", is4K: true, tags: ["gladiator", "arena", "4k"], transcript: "Are you not entertained?" },
+  { youtubeId: "uXGE0vuuaDo", title: "The Matrix", scene: "Neo vs Merovingian", movie: "The Matrix Reloaded", channel: "IMAX", views: 2_800_000, viralScore: 97, duration: "PT2M00S", type: "film", is4K: true, tags: ["matrix", "neo", "4k"], transcript: "I know kung fu." },
 
-  { youtubeId: "H12aua7_h08", title: "Breaking Bad", scene: "I Am The Danger", movie: "Breaking Bad", channel: "AMC", views: 28_000_000, viralScore: 98, duration: "PT2M22S", type: "series", is4K: true, tags: ["breaking bad", "walter white", "series"], transcript: "I am the danger. I am the one who knocks." },
-  { youtubeId: "KPL_WIOQv_c", title: "Game of Thrones", scene: "Battle of the Bastards", movie: "Game of Thrones", channel: "HBO", views: 35_000_000, viralScore: 97, duration: "PT4M30S", type: "series", is4K: true, tags: ["game of thrones", "battle", "series"], transcript: "Your brother was a rebel and a traitor." },
-  { youtubeId: "b9EkMc79ZSU", title: "Stranger Things", scene: "Eleven vs Demogorgon", movie: "Stranger Things", channel: "Netflix", views: 19_000_000, viralScore: 95, duration: "PT2M50S", type: "series", is4K: true, tags: ["stranger things", "eleven", "series"], transcript: "Friends don't lie." },
-  { youtubeId: "WmVLcj-XKnM", title: "Peaky Blinders", scene: "By Order of the Peaky Blinders", movie: "Peaky Blinders", channel: "BBC", views: 24_000_000, viralScore: 96, duration: "PT2M15S", type: "series", is4K: true, tags: ["peaky blinders", "tommy shelby", "series"], transcript: "By order of the Peaky Blinders." },
+  { youtubeId: "gkyNick_VAM", title: "Breaking Bad", scene: "I Am The Danger", movie: "Breaking Bad", channel: "Rotten Tomatoes", views: 5_000_000, viralScore: 98, duration: "PT2M22S", type: "series", is4K: true, tags: ["breaking bad", "walter white"], transcript: "I am the danger. I am the one who knocks." },
+  { youtubeId: "fmydmS7sxu4", title: "Game of Thrones", scene: "Dragon Scene", movie: "Game of Thrones", channel: "HBO Clips", views: 6_000_000, viralScore: 97, duration: "PT3M00S", type: "series", is4K: true, tags: ["game of thrones", "dragon"], transcript: "Dracarys." },
+  { youtubeId: "b9EkMc79ZSU", title: "Stranger Things", scene: "Eleven vs Demogorgon", movie: "Stranger Things", channel: "Netflix", views: 19_000_000, viralScore: 95, duration: "PT2M50S", type: "series", is4K: true, tags: ["stranger things", "eleven"], transcript: "Friends don't lie." },
+  { youtubeId: "WmVLcj-XKnM", title: "Peaky Blinders", scene: "By Order of the Peaky Blinders", movie: "Peaky Blinders", channel: "BBC", views: 24_000_000, viralScore: 96, duration: "PT2M15S", type: "series", is4K: true, tags: ["peaky blinders"], transcript: "By order of the Peaky Blinders." },
 ];
 
 export const TRENDING_FILMS: [string, string][] = [
@@ -49,13 +49,16 @@ export function thumbForId(id: string) {
   return `https://i.ytimg.com/vi/${id}/hqdefault.jpg`;
 }
 
+export function embedUrl(id: string) {
+  return `https://www.youtube.com/embed/${id}?rel=0&modestbranding=1`;
+}
+
 export type SceneGroup = {
   movie: string;
   type: MediaType;
   clips: DemoClip[];
 };
 
-/** Tri par film puis par score (meilleures scènes en premier). */
 export function groupByScene(clips: DemoClip[]): SceneGroup[] {
   const map = new Map<string, SceneGroup>();
   for (const clip of clips) {

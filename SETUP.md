@@ -1,101 +1,89 @@
 # Configuration ClipMine
 
-Guide pour activer toutes les fonctionnalités en production (Vercel + worker dédié).
+Guide pour activer toutes les fonctionnalités en production (Vercel + worker Fly.io).
 
 ## 1. Vercel — variables d'environnement
 
-Dans **Vercel → Project → Settings → Environment Variables**, ajoute :
-
 | Variable | Rôle |
 |---|---|
-| `YOUTUBE_API_KEY` | Recherche live films & séries via YouTube Data API v3 |
-| `DATABASE_URL` | Comptes, quotas, historique exports (Supabase Postgres) |
+| `YOUTUBE_API_KEY` | Recherche live films & séries ✅ |
+| `DATABASE_URL` | Pooler Supabase (comptes, quotas, exports) |
+| `DIRECT_URL` | Connexion directe Postgres (migrations Prisma) |
 | `STRIPE_SECRET_KEY` | Paiements |
 | `STRIPE_PRICE_CREATOR` / `PRO` / `CREDITS_10` | IDs de prix Stripe |
-| `R2_ACCOUNT_ID` / `R2_ACCESS_KEY_ID` / `R2_SECRET_ACCESS_KEY` / `R2_BUCKET` | Stockage MP4 exportés |
-| `WORKER_URL` / `WORKER_SECRET` | Pipeline vidéo ffmpeg (Railway ou Fly) |
-| Clerk + `CRON_SECRET` | Déjà configurés |
+| `STRIPE_WEBHOOK_SECRET` | Signature webhook Stripe |
+| `R2_*` | Stockage MP4 exportés |
+| `WORKER_URL` / `WORKER_SECRET` | Pipeline ffmpeg sur Fly.io |
+| Clerk + `CRON_SECRET` | ✅ déjà configurés |
 
-Copie `.env.example` en `.env.local` pour le dev local.
+### Supabase (projet `hhfojclzmtxnvvnqnhfl`)
 
-### YouTube API
+Tables Prisma **`User`** + **`Download`** déjà créées via migration `clipmine_init`.
 
-1. [Google Cloud Console](https://console.cloud.google.com) → nouveau projet
-2. Activer **YouTube Data API v3**
-3. Créer une clé API → `YOUTUBE_API_KEY`
-
-### Database (Supabase)
+1. [Supabase → Database → Connection string](https://supabase.com/dashboard/project/hhfojclzmtxnvvnqnhfl/settings/database)
+2. Copie **URI** (mode Transaction pooler → `DATABASE_URL`)
+3. Copie **URI** (mode Direct → `DIRECT_URL`)
+4. Remplace `PASSWORD` par le mot de passe DB
 
 ```bash
-npx prisma migrate deploy   # prod
+npx prisma migrate deploy   # prod (avec DIRECT_URL)
 npx prisma migrate dev      # local
 ```
 
 ### Stripe
 
-1. Crée 3 produits/prix dans Stripe Dashboard
-2. Colle les `price_xxx` dans les variables
-3. Webhook → `https://clipmine.fr/api/stripe-webhook`
+Avec ta clé secrète test (même compte que `pk_test_51TZG4k...`) :
+
+```bash
+STRIPE_SECRET_KEY=sk_test_xxx node scripts/setup-stripe.mjs
+```
+
+Le script crée les 3 prix + le webhook `https://clipmine.fr/api/stripe-webhook` et affiche les variables à coller sur Vercel.
 
 ### Cloudflare R2
 
 1. Bucket `clipmine-exports`
 2. API token avec accès R2
-3. Variables `R2_*` sur Vercel **et** sur le worker
+3. Variables `R2_*` sur Vercel **et** sur le worker Fly
 
 ---
 
-## 2. Worker vidéo (Railway ou Fly.io)
+## 2. Worker vidéo (Fly.io)
 
 **ffmpeg et yt-dlp ne tournent pas sur Vercel serverless.**
-
-Le dossier `worker/` contient un serveur Express minimal :
 
 ```bash
 cd worker
 npm install
-# Fly.io
-fly launch
-fly secrets set WORKER_SECRET=xxx R2_ACCOUNT_ID=... DATABASE_URL=...
+fly auth login
+fly launch --no-deploy    # app: clipmine-worker, region: cdg
+fly secrets set WORKER_SECRET=xxx DATABASE_URL=xxx R2_ACCOUNT_ID=... R2_ACCESS_KEY_ID=... R2_SECRET_ACCESS_KEY=... R2_BUCKET=clipmine-exports
 fly deploy
-
-# Railway
-railway up
 ```
 
 Puis sur Vercel :
 
 ```
-WORKER_URL=https://ton-worker.fly.dev
+WORKER_URL=https://clipmine-worker.fly.dev
 WORKER_SECRET=même_secret_que_sur_le_worker
 ```
 
-Le worker reçoit `POST /process` depuis `/api/download` et exécute yt-dlp → ffmpeg → (upload R2 à brancher).
+Le worker : yt-dlp → ffmpeg → upload R2 → met à jour `Download.status` en DB.
 
 ---
 
-## 3. Affiliation Amazon Prime
+## 3. Checklist déploiement
 
-Lien configuré dans `lib/constants.ts` :
-
-`https://www.primevideo.com/?tag=clipmine-21`
-
-Affiché au-dessus de chaque scène film/série dans l'app.
-
----
-
-## 4. Checklist déploiement
-
-- [ ] `YOUTUBE_API_KEY` → recherche live (sinon mode démo)
-- [ ] `DATABASE_URL` + `prisma migrate deploy` → comptes réels
+- [x] `YOUTUBE_API_KEY` → recherche live
+- [ ] `DATABASE_URL` + `DIRECT_URL` → comptes réels
 - [ ] Stripe keys + webhooks → paiements
 - [ ] R2 → stockage exports
-- [ ] Worker déployé + `WORKER_URL` → pipeline vidéo réel
-- [ ] Clerk webhook → sync users
+- [ ] Worker Fly + `WORKER_URL` → pipeline vidéo
+- [ ] Clerk webhook → sync users (`CLERK_WEBHOOK_SECRET`)
 
 ---
 
-## 5. Dev local
+## 4. Dev local
 
 ```bash
 cp .env.example .env.local
@@ -103,7 +91,3 @@ npm install
 npx prisma migrate dev
 npm run dev
 ```
-
-Sans `YOUTUBE_API_KEY` : clips démo films/séries.  
-Sans `DATABASE_URL` : mode waitlist sur les exports.  
-Sans `WORKER_URL` : jobs en file d'attente.

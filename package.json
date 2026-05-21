@@ -7,7 +7,8 @@
     "build": "prisma generate && next build",
     "start": "next start",
     "lint": "next lint",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate",
+    "setup:stripe": "node scripts/setup-stripe.mjs"
   },
   "dependencies": {
     "next": "14.2.5",

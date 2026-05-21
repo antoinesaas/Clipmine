@@ -70,7 +70,10 @@ export default function UpscalePage() {
           </div>
           <SignedOut>
             <SignInButton mode="modal">
-              <button className="btn btn-primary">Essayer gratuitement</button>
+              <button type="button" className="btn btn-primary btn-nav-cta">
+                <span className="only-desktop">Essayer gratuitement</span>
+                <span className="only-mobile">Essayer</span>
+              </button>
             </SignInButton>
           </SignedOut>
           <SignedIn><UserButton afterSignOutUrl="/" /></SignedIn>
