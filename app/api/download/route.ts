@@ -2,11 +2,31 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { prisma, hasDatabase } from "@/lib/prisma";
 import { checkExportEntitlement, consumeExport } from "@/lib/entitlements";
+import { hasWorker, WORKER_SECRET, WORKER_URL } from "@/lib/constants";
 
-// POST /api/download  { youtubeId, title, ratio, quality, enhance }
-// MODE WAITLIST : le pipeline ffmpeg/youtube-dl ne tourne PAS sur Vercel serverless.
-// On crée le job en "queued" et on prévient l'utilisateur par email/notification
-// quand le worker dédié sera en ligne.
+async function dispatchToWorker(payload: {
+  jobId: string;
+  youtubeId: string;
+  title: string;
+  ratio: string;
+  quality: string;
+  enhance: boolean;
+}) {
+  if (!hasWorker()) return;
+  try {
+    await fetch(`${WORKER_URL}/process`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${WORKER_SECRET}`,
+      },
+      body: JSON.stringify(payload),
+    });
+  } catch (e) {
+    console.error("[/api/download] worker dispatch failed", e);
+  }
+}
+
 export async function POST(req: NextRequest) {
   const { userId: clerkId } = auth();
   if (!clerkId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
@@ -23,7 +43,7 @@ export async function POST(req: NextRequest) {
       jobId: `waitlist-${Date.now()}`,
       status: "queued",
       mode: "waitlist",
-      message: "Tu es dans la file d'attente. On t'envoie le clip par email dès qu'il est prêt.",
+      message: "File d'attente — le worker vidéo sera activé dès que WORKER_URL est configuré.",
     });
   }
 
@@ -44,17 +64,30 @@ export async function POST(req: NextRequest) {
         ratio: ratio ?? "9:16",
         quality: quality ?? "4K",
         enhanced: !!enhance,
-        status: "queued",
+        status: hasWorker() ? "processing" : "queued",
       },
     });
 
     await consumeExport(user.id, ent.source);
 
+    if (hasWorker()) {
+      await dispatchToWorker({
+        jobId: dl.id,
+        youtubeId,
+        title: title ?? "Untitled",
+        ratio: ratio ?? "9:16",
+        quality: quality ?? "4K",
+        enhance: !!enhance,
+      });
+    }
+
     return NextResponse.json({
       jobId: dl.id,
-      status: "queued",
-      mode: "waitlist",
-      message: "Export ajouté à la file d'attente. Tu recevras un email quand il sera prêt.",
+      status: hasWorker() ? "processing" : "queued",
+      mode: hasWorker() ? "live" : "waitlist",
+      message: hasWorker()
+        ? "Export en cours sur le worker vidéo."
+        : "Export en file — configure WORKER_URL (Railway/Fly) pour le pipeline ffmpeg.",
     });
   } catch (e) {
     console.error("[/api/download] error", e);
@@ -62,7 +95,7 @@ export async function POST(req: NextRequest) {
       jobId: `error-${Date.now()}`,
       status: "queued",
       mode: "waitlist",
-      message: "On t'a inscrit sur la liste d'attente. On te recontacte vite.",
+      message: "Erreur — réessaie dans un instant.",
     });
   }
 }

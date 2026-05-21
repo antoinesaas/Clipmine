@@ -11,7 +11,7 @@ export const metadata: Metadata = {
     template: "%s · ClipMine",
   },
   description:
-    "Upscale, denoise, restore et stabilize tes clips YouTube en qualité 4K cinéma. La matière première de tes édits TikTok, Reels et Shorts, prête en quelques secondes.",
+    "Scènes films & séries pour éditeurs TikTok. Colle un lien YouTube ou cherche une réplique — export 9:16 en 4K.",
   keywords: [
     "video upscale", "4K AI", "video enhancement", "clip YouTube", "TikTok edit",
     "AI denoise", "frame interpolation", "slow motion", "ClipMine",
@@ -46,6 +46,7 @@ export const viewport: Viewport = {
   colorScheme: "dark",
   width: "device-width",
   initialScale: 1,
+  viewportFit: "cover",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

@@ -3,19 +3,15 @@
 import { useEffect, useState } from "react";
 import { SignedIn, SignedOut, SignInButton, UserButton } from "@clerk/nextjs";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { DEMO_CLIPS, thumbForId } from "@/lib/demo-clips";
 
-type Result = {
-  youtubeId: string; title: string; channel: string;
-  thumb?: string; views: number; viralScore: number; direct?: boolean;
-};
-
 const CHIPS = [
-  ["🚗 Supercars", "supercar drone 4k"],
-  ["🔥 Motivation", "motivation speech"],
-  ["⚔️ Anime", "anime 4k amv"],
-  ["🌍 Cinematic", "cinematic nature 4k"],
-  ["💪 Workout", "gym aesthetic"],
+  ["Inception", "Inception movie scene"],
+  ["Breaking Bad", "Breaking Bad series scene"],
+  ["Dark Knight", "Dark Knight Joker scene"],
+  ["Interstellar", "Interstellar docking scene"],
+  ["Game of Thrones", "Game of Thrones battle scene"],
 ];
 
 const MODELS = [
@@ -39,33 +35,29 @@ function isYoutubeUrl(s: string) {
 }
 
 export default function Landing() {
+  const router = useRouter();
+  const [bgRows, setBgRows] = useState<string[][]>([]);
   const [query, setQuery] = useState("");
-  const [results, setResults] = useState<Result[] | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [comparePos, setComparePos] = useState(50);
 
-  async function runSearch(q?: string) {
+  useEffect(() => {
+    const thumbs = DEMO_CLIPS.map((c) => thumbForId(c.youtubeId));
+    setBgRows([0, 1, 2].map((i) => {
+      const row = [...thumbs.slice(i * 7), ...thumbs.slice(0, i * 7)];
+      return Array.from({ length: 18 }, (_, j) => row[j % row.length]);
+    }));
+  }, []);
+
+  function goSearch(q?: string) {
     const term = (q ?? query).trim();
     if (!term) return;
-    setQuery(term); setLoading(true); setResults([]); setError(null);
-    try {
-      const r = await fetch(`/api/search?q=${encodeURIComponent(term)}`);
-      const data = await r.json();
-      if (!r.ok) {
-        setError(data.message ?? "Une erreur est survenue.");
-        return;
-      }
-      if (!data.results?.length) {
-        setError("Aucun résultat. Essaie un autre mot-clé ou colle un lien YouTube.");
-        return;
-      }
-      setResults(data.results);
-    } catch {
-      setError("Erreur réseau. Réessaie.");
-    } finally {
-      setLoading(false);
-    }
+    setQuery(term);
+    router.push(`/app/search?q=${encodeURIComponent(term)}`);
+  }
+
+  function searchUrl(q?: string) {
+    const term = (q ?? query).trim();
+    return term ? `/app/search?q=${encodeURIComponent(term)}` : "/app/search";
   }
 
   function handleCompareMove(e: React.MouseEvent<HTMLDivElement>) {
@@ -87,7 +79,7 @@ export default function Landing() {
             <a href="#pricing">Tarifs</a>
             <Link href="/upscale">Upscale</Link>
             <SignedOut><SignInButton mode="modal"><a>Connexion</a></SignInButton></SignedOut>
-            <SignedIn><Link href="/app">Mon espace</Link></SignedIn>
+            <SignedIn><Link href="/app/search">Mon espace</Link></SignedIn>
           </div>
           <SignedOut>
             <SignInButton mode="modal">
@@ -99,19 +91,32 @@ export default function Landing() {
       </nav>
 
       <header className="hero">
-        <div className="hero-grid" />
+        <div className="clip-bg">
+          {bgRows.map((row, i) => (
+            <div key={i} className={`clip-row r${i + 1}`}>
+              {[...row, ...row].map((thumb, j) => (
+                <div
+                  key={j}
+                  className="clip-thumb"
+                  style={{ backgroundImage: `url(${thumb})` }}
+                />
+              ))}
+            </div>
+          ))}
+        </div>
+        <div className="hero-fade" />
         <div className="hero-glow" />
         <div className="hero-in wrap">
           <div className="badge">
-            <span className="pulse" />CINEMATIC AI · UPSCALE · ENHANCE · 4K
+            <span className="pulse" />FILMS · SÉRIES · ÉDITS TIKTOK
           </div>
           <h1>
-            Mine YouTube.<br />
-            <span className="grad">Cinema-grade clips, instantly.</span>
+            Trouve ta scène.<br />
+            <span className="grad">Exporte en 9:16 · 4K.</span>
           </h1>
           <p className="sub">
-            Notre IA upscale, denoise et restore n'importe quel clip YouTube en qualité 4K cinéma.
-            Recadrage automatique 9:16 / 16:9 / 4:3. La matière première de tes édits, prête en quelques secondes.
+            Films et séries uniquement — comme une base de répliques pour éditeurs.
+            Colle un lien YouTube ou tape une scène. Recadrage auto, upscale IA.
           </p>
 
           <div className="search-box">
@@ -130,65 +135,45 @@ export default function Landing() {
                 className="search-input"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && runSearch()}
-                placeholder="Mots-clés ou colle un lien YouTube..."
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    goSearch();
+                  }
+                }}
+                placeholder="Réplique, film, série… ou lien YouTube"
               />
-              <button className="btn btn-primary" onClick={() => runSearch()}>
-                Mine →
-              </button>
+              <SignedIn>
+                <button type="button" className="btn btn-primary" onClick={() => goSearch()}>
+                  Mine →
+                </button>
+              </SignedIn>
+              <SignedOut>
+                <SignInButton mode="modal" forceRedirectUrl={searchUrl()}>
+                  <button type="button" className="btn btn-primary" onClick={() => setQuery(query)}>
+                    Mine →
+                  </button>
+                </SignInButton>
+              </SignedOut>
             </div>
             <div className="chips">
               {CHIPS.map(([label, q]) => (
-                <span key={q} className="chip" onClick={() => runSearch(q)}>{label}</span>
+                <SignedIn key={q}>
+                  <button type="button" className="chip" onClick={() => goSearch(q)}>{label}</button>
+                </SignedIn>
+              ))}
+              {CHIPS.map(([label, q]) => (
+                <SignedOut key={`out-${q}`}>
+                  <SignInButton mode="modal" forceRedirectUrl={searchUrl(q)}>
+                    <button type="button" className="chip">{label}</button>
+                  </SignInButton>
+                </SignedOut>
               ))}
             </div>
             <div className="hero-note">
-              Résultats en <b>4K source</b> · lien YouTube direct accepté · enhance IA inclus
+              Films & séries · lien YouTube accepté · export 4K
             </div>
           </div>
-
-          {error && !loading && (
-            <div className="search-error">⚠️ {error}</div>
-          )}
-
-          {(loading || (results && results.length > 0)) && (
-            <div className="results-wrap">
-              <div className="res-head">
-                <h3>Résultats {query && `pour « ${query} »`}</h3>
-                <div className="filters">
-                  <span className="fpill on">9:16</span>
-                  <span className="fpill">16:9</span>
-                  <span className="fpill">4K</span>
-                </div>
-              </div>
-              <div className="res-grid">
-                {loading
-                  ? Array.from({ length: 8 }).map((_, i) => (
-                      <div key={i} className="res-card"><div className="skeleton" /></div>
-                    ))
-                  : results!.map((r) => (
-                      <SignInButton key={r.youtubeId} mode="modal">
-                        <div className="res-card">
-                          <div
-                            className="res-thumb"
-                            style={{ backgroundImage: r.thumb ? `url(${r.thumb})` : undefined }}
-                          >
-                            <span className="score">🔥 {r.viralScore}</span>
-                            <span className="dur">4K</span>
-                          </div>
-                          <div className="res-body">
-                            <div className="t">{r.title}</div>
-                            <div className="m">
-                              {r.views > 0 ? `${(r.views / 1e6).toFixed(1)}M vues · ` : ""}
-                              {r.channel}
-                            </div>
-                          </div>
-                        </div>
-                      </SignInButton>
-                    ))}
-              </div>
-            </div>
-          )}
         </div>
 
         <div className="models-row">
@@ -292,16 +277,16 @@ export default function Landing() {
       <section id="demos">
         <div className="wrap">
           <div className="eyebrow">En action</div>
-          <h2 className="h2">Des clips réels, minés par ClipMine.</h2>
+          <h2 className="h2">Scènes films & séries.</h2>
           <p className="sec-sub">
-            Voici quelques-uns des clips les plus viraux de tous les temps. Clique pour voir comment
-            on les upscale et les recadre en 9:16, prêts pour ton prochain édit.
+            Inspire-toi de ta scène, exporte en 9:16 pour ton prochain édit TikTok.
           </p>
 
           <div className="demo-grid">
             {DEMO_CLIPS.slice(0, 8).map((c) => (
-              <SignInButton key={c.youtubeId} mode="modal">
-                <div
+              <SignedIn key={c.youtubeId}>
+                <Link
+                  href="/app/search"
                   className="demo"
                   style={{ backgroundImage: `url(${thumbForId(c.youtubeId)})` }}
                 >
@@ -312,8 +297,26 @@ export default function Landing() {
                     </svg>
                   </div>
                   <div className="lbl">{c.title}</div>
-                </div>
-              </SignInButton>
+                </Link>
+              </SignedIn>
+            ))}
+            {DEMO_CLIPS.slice(0, 8).map((c) => (
+              <SignedOut key={`out-${c.youtubeId}`}>
+                <SignInButton mode="modal" forceRedirectUrl="/app">
+                  <div
+                    className="demo"
+                    style={{ backgroundImage: `url(${thumbForId(c.youtubeId)})` }}
+                  >
+                    <span className="badge-4k">4K · 9:16</span>
+                    <div className="play">
+                      <svg width="22" height="22" viewBox="0 0 24 24" fill="white">
+                        <path d="M8 5v14l11-7z" />
+                      </svg>
+                    </div>
+                    <div className="lbl">{c.title}</div>
+                  </div>
+                </SignInButton>
+              </SignedOut>
             ))}
           </div>
         </div>
