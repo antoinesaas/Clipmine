@@ -16,7 +16,7 @@ import {
   normalizeTools,
   type PipelineInput,
 } from "./pipeline.js";
-import { downloadYoutubeMp4 } from "./ytdlp.js";
+import { downloadYoutubeMp4, hasYoutubeCookies } from "./ytdlp.js";
 
 const exec = promisify(execFile);
 const app = express();
@@ -126,7 +126,14 @@ async function runFfmpegWithFallbacks(
 }
 
 app.get("/health", (_req, res) => {
-  res.json({ ok: true, service: "clipmine-worker", r2: hasR2, db: Boolean(prisma), pipeline: "ffmpeg-ai-v3" });
+  res.json({
+    ok: true,
+    service: "clipmine-worker",
+    r2: hasR2,
+    db: Boolean(prisma),
+    pipeline: "ffmpeg-ai-v4",
+    youtubeCookies: hasYoutubeCookies(),
+  });
 });
 
 app.post("/process", auth, async (req, res) => {

@@ -38,7 +38,7 @@ export const DEMO_CLIPS: DemoClip[] = [
 
 export const TRENDING_FILMS: [string, string][] = [
   ["Interstellar", "Interstellar movie scene 4k"],
-  ["Oppenheimer", "Oppenheimer movie scene 4k"],
+  ["Oppenheimer", "Oppenheimer scene pack clips for edits"],
   ["The Batman", "The Batman movie scene 4k"],
   ["Dune", "Dune movie scene 4k"],
   ["John Wick", "John Wick 4 fight scene 4k"],

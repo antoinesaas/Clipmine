@@ -8,6 +8,10 @@ const exec = promisify(execFile);
 const TMP = process.env.TMP_DIR ?? "/tmp/clipmine";
 const COOKIES_PATH = path.join(TMP, "youtube-cookies.txt");
 
+export function hasYoutubeCookies(): boolean {
+  return Boolean(process.env.YT_COOKIES_BASE64?.trim() || process.env.YT_COOKIES_PATH?.trim());
+}
+
 async function ensureCookiesFile(): Promise<string | null> {
   const b64 = process.env.YT_COOKIES_BASE64?.trim();
   const filePath = process.env.YT_COOKIES_PATH?.trim();
@@ -31,52 +35,52 @@ async function ensureCookiesFile(): Promise<string | null> {
 }
 
 function baseArgs(outputPath: string, url: string): string[] {
-  const args = [
+  return [
     "--js-runtimes",
     "node",
     "--remote-components",
     "ejs:github",
+    "--geo-bypass",
     "--extractor-retries",
-    "3",
+    "4",
     "--retries",
-    "5",
+    "6",
     "--fragment-retries",
-    "5",
+    "6",
     "--socket-timeout",
-    "30",
+    "45",
     "--no-playlist",
     "--no-warnings",
+    "--referer",
+    "https://www.youtube.com/",
     "--merge-output-format",
     "mp4",
     "-o",
     outputPath,
     url,
   ];
-  return args;
 }
 
 type Strategy = { label: string; extra: string[]; format: string[] };
 
 const STRATEGIES: Strategy[] = [
   {
-    label: "web",
-    extra: ["--extractor-args", "youtube:player_client=web"],
+    label: "android+web",
+    extra: [
+      "--extractor-args",
+      "youtube:player_client=android,web,web_embedded;player_skip=webpage,configs",
+    ],
     format: ["-f", "bv*[height<=1080][ext=mp4]+ba[ext=m4a]/b[height<=1080]/best[ext=mp4]/best"],
   },
   {
-    label: "android+embed",
-    extra: ["--extractor-args", "youtube:player_client=android,web_embedded,tv_embedded;player_skip=webpage"],
-    format: ["-f", "bv*[height<=1080][ext=mp4]+ba[ext=m4a]/b[height<=1080]/best[ext=mp4]/best"],
+    label: "tv_embedded",
+    extra: ["--extractor-args", "youtube:player_client=tv_embedded,web"],
+    format: ["-f", "best[height<=1080][ext=mp4]/best[ext=mp4]/best"],
   },
   {
     label: "android_vr",
     extra: ["--extractor-args", "youtube:player_client=android_vr"],
-    format: ["-f", "best[height<=1080][ext=mp4]/best[ext=mp4]/best"],
-  },
-  {
-    label: "tv",
-    extra: ["--extractor-args", "youtube:player_client=tv_embedded"],
-    format: ["-f", "best[height<=1080]/best"],
+    format: ["-f", "best[height<=1080][ext=mp4]/best"],
   },
   {
     label: "ios",
@@ -88,41 +92,45 @@ const STRATEGIES: Strategy[] = [
     extra: ["--extractor-args", "youtube:player_client=mweb"],
     format: ["-f", "best[height<=720]/best"],
   },
+  {
+    label: "fallback_any",
+    extra: ["--extractor-args", "youtube:player_client=android"],
+    format: ["-f", "bestvideo[height<=1080]+bestaudio/best[height<=1080]/best"],
+  },
 ];
 
 async function runYtdlp(args: string[]) {
-  await exec("yt-dlp", args, { timeout: 600_000, maxBuffer: 12 * 1024 * 1024 });
+  await exec("yt-dlp", args, { timeout: 600_000, maxBuffer: 16 * 1024 * 1024 });
 }
 
-/** Téléchargement YouTube — plusieurs clients + cookies optionnels (anti-bot Fly). */
+/** Téléchargement YouTube — multi-clients ; cookies Fly recommandés. */
 export async function downloadYoutubeMp4(youtubeId: string, outputPath: string) {
   const url = `https://www.youtube.com/watch?v=${youtubeId}`;
   const cookies = await ensureCookiesFile();
   const errors: string[] = [];
 
   for (const strategy of STRATEGIES) {
-    const args = [
-      ...baseArgs(outputPath, url),
-      ...strategy.extra,
-      ...strategy.format,
-    ];
+    const args = [...baseArgs(outputPath, url), ...strategy.extra, ...strategy.format];
     if (cookies) args.splice(1, 0, "--cookies", cookies);
 
     try {
       await runYtdlp(args);
       await access(outputPath);
-      console.log("[ytdlp] ok", strategy.label, youtubeId);
+      console.log("[ytdlp] ok", strategy.label, youtubeId, cookies ? "cookies" : "no-cookies");
       return;
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
-      errors.push(`${strategy.label}: ${msg.slice(0, 120)}`);
-      console.warn("[ytdlp] fail", strategy.label, msg.slice(0, 200));
+      errors.push(`${strategy.label}: ${msg.slice(0, 160)}`);
+      console.warn("[ytdlp] fail", strategy.label, msg.slice(0, 240));
     }
   }
 
+  const botBlock = errors.some((x) => /bot|sign in|confirm|not a bot/i.test(x));
   throw new Error(
-    errors.some((x) => /bot|sign in|confirm/i.test(x))
-      ? "YouTube anti-bot : ajoute des cookies (YT_COOKIES_BASE64) sur Fly ou réessaie un autre clip."
-      : "Téléchargement YouTube impossible (vidéo indisponible ou réseau).",
+    botBlock
+      ? cookies
+        ? "YouTube bloque encore ce clip. Essaie un autre extrait ou régénère les cookies."
+        : "YouTube bloque le téléchargement : configure YT_COOKIES_BASE64 sur Fly (cookies navigateur)."
+      : "Téléchargement impossible (vidéo privée, région ou réseau).",
   );
 }

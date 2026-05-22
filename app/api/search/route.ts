@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { DEMO_CLIPS, searchDemo, thumbForId, groupByScene } from "@/lib/demo-clips";
+import { searchDemo, thumbForId, groupByScene } from "@/lib/demo-clips";
 import {
   augmentSearchQuery,
   inferMediaType,
@@ -9,9 +9,9 @@ import {
   filmSearchQueries,
   extractMovieTitle,
   parseDurationSeconds,
-  KNOWN_FILM_TITLES,
 } from "@/lib/film-filter";
 import type { MediaType } from "@/lib/film-filter";
+import { sortByRelevance } from "@/lib/search-relevance";
 import { fetchTranscriptSnippet } from "@/lib/youtube-transcript";
 
 export type SearchResult = {
@@ -77,16 +77,13 @@ function mapResult(v: {
   };
 }
 
-function sortByScene(results: SearchResult[]): SearchResult[] {
-  const groups = new Map<string, SearchResult[]>();
-  for (const r of results) {
-    const key = r.movie;
-    if (!groups.has(key)) groups.set(key, []);
-    groups.get(key)!.push(r);
+function finalizeResults(results: SearchResult[], q: string, sort: string): SearchResult[] {
+  const filmSearch = isFilmTitleQuery(q);
+  const ranked = sortByRelevance(results, q, filmSearch);
+  if (sort === "popular") {
+    return ranked.sort((a, b) => b.views - a.views);
   }
-  return [...groups.entries()]
-    .sort((a, b) => Math.max(...b[1].map((x) => x.viralScore)) - Math.max(...a[1].map((x) => x.viralScore)))
-    .flatMap(([, clips]) => clips.sort((a, b) => b.viralScore - a.viralScore));
+  return ranked;
 }
 
 export async function GET(req: NextRequest) {
@@ -138,7 +135,7 @@ export async function GET(req: NextRequest) {
     try {
       const live = await searchLive(q, key, typeParam);
       if (live?.length) {
-        const sorted = sort === "scene" ? sortByScene(live) : live.sort((a, b) => b.viralScore - a.viralScore);
+        const sorted = finalizeResults(live, q, sort);
         return NextResponse.json({ results: sorted.slice(0, 16), mode: "live", sort });
       }
     } catch (e) {
@@ -161,11 +158,11 @@ export async function GET(req: NextRequest) {
     is4K: c.is4K,
   }));
 
-  const results = sort === "scene" ? sortByScene(demo) : demo.sort((a, b) => b.viralScore - a.viralScore);
+  const results = finalizeResults(demo, q, sort);
   const groups = groupByScene(demoClips);
 
   return NextResponse.json({
-    results,
+    results: results.slice(0, 16),
     groups: groups.map((g) => ({
       movie: g.movie,
       type: g.type,
@@ -213,16 +210,18 @@ async function searchLiveOnce(
     filmSearch?: boolean;
     searchQ?: string;
     typeFilter?: MediaType | "all" | null;
-    videoDuration?: "medium" | "long";
+    videoDuration?: "medium" | "long" | "short";
   },
 ) {
   const searchUrl = new URL("https://www.googleapis.com/youtube/v3/search");
   searchUrl.searchParams.set("part", "snippet");
   searchUrl.searchParams.set("q", searchQ);
   searchUrl.searchParams.set("type", "video");
-  searchUrl.searchParams.set("maxResults", "40");
+  searchUrl.searchParams.set("maxResults", "25");
   searchUrl.searchParams.set("videoDefinition", "high");
-  if (!opts.artist) searchUrl.searchParams.set("videoCategoryId", "1");
+  if (!opts.artist && !opts.filmSearch) {
+    searchUrl.searchParams.set("videoCategoryId", "1");
+  }
   if (opts.filmSearch && opts.videoDuration) {
     searchUrl.searchParams.set("videoDuration", opts.videoDuration);
   }
@@ -258,6 +257,22 @@ async function searchLiveOnce(
     .map((row: { r: Mapped }) => row.r);
 }
 
+function demoToResults(q: string, typeFilter?: MediaType | "all" | null): SearchResult[] {
+  return searchDemo(q, 12, typeFilter ?? "all").map((c) => ({
+    youtubeId: c.youtubeId,
+    title: c.title,
+    movie: c.movie,
+    scene: c.scene,
+    channel: c.channel,
+    thumb: thumbForId(c.youtubeId),
+    views: c.views,
+    viralScore: c.viralScore,
+    type: c.type,
+    transcript: c.transcript,
+    is4K: c.is4K,
+  }));
+}
+
 async function searchLive(q: string, key: string, typeFilter?: MediaType | "all" | null) {
   const artist = isArtistQuery(q);
   const filmSearch = isFilmTitleQuery(q);
@@ -269,13 +284,13 @@ async function searchLive(q: string, key: string, typeFilter?: MediaType | "all"
       ]
     : filmSearch
       ? filmSearchQueries(q)
-      : [`${q.trim()} movie scene 4k`];
+      : [`${q.trim()} scene pack clips for edits`, `${q.trim()} movie scene 4k`];
 
   const seen = new Set<string>();
   const merged: SearchResult[] = [];
 
-  const durations: Array<"medium" | "long" | undefined> = filmSearch
-    ? ["medium", "long"]
+  const durations: Array<"medium" | "long" | "short" | undefined> = filmSearch
+    ? ["medium", "long", "short"]
     : [undefined];
 
   for (const searchQ of queries) {
@@ -292,30 +307,22 @@ async function searchLive(q: string, key: string, typeFilter?: MediaType | "all"
         if (seen.has(r.youtubeId)) continue;
         seen.add(r.youtubeId);
         merged.push(r);
-        if (merged.length >= 16) break;
       }
-      if (merged.length >= 12) break;
+      if (merged.length >= 28) break;
     }
-    if (merged.length >= 12) break;
+    if (merged.length >= 28) break;
   }
 
-  if (filmSearch && merged.length > 1) {
-    const qLower = q.trim().toLowerCase();
-    const words = qLower.replace(/\b(movie|film|scene|4k|clip|official)\b/gi, "").trim().split(/\s+/).filter((w) => w.length > 2);
-    merged.sort((a, b) => {
-      const score = (r: SearchResult) => {
-        let s = r.viralScore;
-        if (/movieclips/i.test(r.channel)) s += 30;
-        if (KNOWN_FILM_TITLES.test(`${r.title} ${r.movie}`)) s += 12;
-        if (words.length && words.every((w) => `${r.title} ${r.movie} ${r.channel}`.toLowerCase().includes(w))) s += 18;
-        return s;
-      };
-      return score(b) - score(a);
-    });
+  if (merged.length < 4) {
+    for (const d of demoToResults(q, typeFilter)) {
+      if (seen.has(d.youtubeId)) continue;
+      seen.add(d.youtubeId);
+      merged.push(d);
+    }
   }
 
   const results: SearchResult[] = await Promise.all(
-    merged.slice(0, 16).map(async (r) => {
+    merged.slice(0, 20).map(async (r) => {
       const transcript = await fetchTranscriptSnippet(r.youtubeId);
       return { ...r, transcript: transcript ?? r.transcript };
     }),

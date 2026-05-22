@@ -27,7 +27,7 @@ const CHIPS: [string, string][] = [
   ["Breaking Bad", "Breaking Bad series scene"],
   ["Interstellar", "Interstellar movieclips"],
   ["Dark Knight", "Dark Knight movieclips"],
-  ["Oppenheimer", "Oppenheimer movieclips"],
+  ["Oppenheimer", "Oppenheimer scene pack clips for edits"],
   ["John Wick", "John Wick movieclips"],
   ["Harry Potter", "Harry Potter movieclips"],
   ["Dune", "Dune movieclips"],
