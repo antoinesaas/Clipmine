@@ -170,7 +170,7 @@ app.post("/process", auth, async (req, res) => {
       const raw = err.stderr ?? err.message ?? String(e);
       const short =
         raw.includes("bot") || raw.includes("Sign in")
-          ? "YouTube a bloqué le téléchargement (anti-bot). Réessaie avec un autre clip."
+          ? "Impossible de télécharger cette vidéo YouTube. Essaie un autre clip."
           : raw.includes("ffmpeg")
             ? "Pipeline vidéo échoué. Réessaie avec moins d'outils IA ou un autre format."
             : raw.slice(0, 240);

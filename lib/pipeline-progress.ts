@@ -7,7 +7,7 @@ export type PipelineStageId = "queued" | "download" | "ffmpeg" | "ready" | "fail
 export const PIPELINE_UI_STAGES: { id: PipelineStageId; label: string; weight: number }[] = [
   { id: "queued", label: "Mise en file d'attente", weight: 0.05 },
   { id: "download", label: "Téléchargement YouTube", weight: 0.3 },
-  { id: "ffmpeg", label: "Pipeline IA (ffmpeg)", weight: 0.6 },
+  { id: "ffmpeg", label: "Outils IA (ffmpeg)", weight: 0.6 },
   { id: "ready", label: "Export prêt", weight: 0.05 },
 ];
 
@@ -33,7 +33,6 @@ export function stageIndex(id: PipelineStageId): number {
 export function ffmpegStepLabels(tools: AiToolId[]): string[] {
   const lines = ["Décodage de la source YouTube"];
   for (const id of tools) {
-    if (id === "stabilize") continue;
     lines.push(`${AI_TOOL_LABELS[id].model} — ${AI_TOOL_LABELS[id].name}`);
   }
   lines.push("Encodage final MP4");

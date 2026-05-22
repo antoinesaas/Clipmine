@@ -37,11 +37,13 @@ export function targetSize(ratio: string, quality: string): { w: number; h: numb
 
 /** slowmo et 60fps sont incompatibles dans la même chaîne -vf. */
 export function reconcileTools(tools: AiTool[]): AiTool[] {
-  const t = [...tools];
-  if (t.includes("slowmo") && t.includes("fps")) {
-    return t.filter((x) => x !== "slowmo");
+  if (tools.includes("slowmo")) {
+    return tools.filter((x) => x !== "fps");
   }
-  return t;
+  if (tools.includes("fps")) {
+    return tools.filter((x) => x !== "slowmo");
+  }
+  return tools;
 }
 
 export function buildVideoFilters(input: PipelineInput): string {
@@ -62,6 +64,10 @@ export function buildVideoFilters(input: PipelineInput): string {
 
   if (tools.includes("denoise")) {
     f.push("hqdn3d=3:2:4:3");
+  }
+
+  if (tools.includes("stabilize")) {
+    f.push("deshake");
   }
 
   if (ratio !== "16:9") {
@@ -135,5 +141,5 @@ export function normalizeTools(raw: unknown, enhance: boolean): AiTool[] {
   }
   const picked = raw.filter((t): t is AiTool => typeof t === "string" && all.includes(t as AiTool));
   const base = picked.length ? picked : ["upscale", "enhance", "denoise", "fps"];
-  return reconcileTools(base.filter((t) => t !== "stabilize"));
+  return reconcileTools(base);
 }

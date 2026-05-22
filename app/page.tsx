@@ -73,7 +73,6 @@ export default function Landing() {
             <a href="#models">Modèles AI</a>
             <a href="#demos">Démos</a>
             <a href="#pricing">Tarifs</a>
-            <Link href="/upscale">Upscale</Link>
             <SignedOut><button type="button" className="nav-link-btn" onClick={() => openSignIn()}>Connexion</button></SignedOut>
             <SignedIn><Link href="/app/search">Mon espace</Link></SignedIn>
           </div>
@@ -301,7 +300,14 @@ export default function Landing() {
           <div className="cta">
             <h2>Ton prochain édit viral<br />commence ici.</h2>
             <p>Premier export 4K offert. Pas de carte. Pas d'excuse.</p>
-            <button type="button" className="btn btn-primary btn-lg" onClick={() => openSignIn({ forceRedirectUrl: "/app/search" })}>
+            <button
+              type="button"
+              className="btn btn-primary btn-lg"
+              onClick={() => {
+                if (isSignedIn) router.push("/app/search");
+                else openSignIn({ forceRedirectUrl: "/app/search" });
+              }}
+            >
               Miner mon premier clip →
             </button>
           </div>
@@ -323,7 +329,6 @@ export default function Landing() {
             <h4>Produit</h4>
             <ul>
               <li><a href="#models">Modèles AI</a></li>
-              <li><Link href="/upscale">Upscale</Link></li>
               <li><a href="#pricing">Tarifs</a></li>
               <li><a href="#demos">Démos</a></li>
             </ul>

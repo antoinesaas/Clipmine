@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import ClipCard from "./ClipCard";
+import { TRENDING_FILMS } from "@/lib/demo-clips";
 
 export type MediaType = "film" | "series";
 
@@ -22,9 +23,17 @@ export type ClipResult = {
 };
 
 const CHIPS: [string, string][] = [
-  ["Inception", "Inception movie scene 4k"],
-  ["Breaking Bad", "Breaking Bad series scene 4k"],
-  ["Interstellar", "Interstellar docking scene 4k"],
+  ["Inception", "Inception movieclips"],
+  ["Breaking Bad", "Breaking Bad series scene"],
+  ["Interstellar", "Interstellar movieclips"],
+  ["Dark Knight", "Dark Knight movieclips"],
+  ["Oppenheimer", "Oppenheimer movieclips"],
+  ["John Wick", "John Wick movieclips"],
+  ["Harry Potter", "Harry Potter movieclips"],
+  ["Dune", "Dune movieclips"],
+  ...TRENDING_FILMS.filter(([label]) =>
+    !["Inception", "Interstellar", "John Wick", "Harry Potter", "Dune", "Oppenheimer"].includes(label),
+  ),
 ];
 
 type TypeFilter = "all" | MediaType;

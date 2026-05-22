@@ -9,6 +9,7 @@ import {
   filmSearchQueries,
   extractMovieTitle,
   parseDurationSeconds,
+  KNOWN_FILM_TITLES,
 } from "@/lib/film-filter";
 import type { MediaType } from "@/lib/film-filter";
 import { fetchTranscriptSnippet } from "@/lib/youtube-transcript";
@@ -210,6 +211,7 @@ async function searchLiveOnce(
   opts: {
     artist: boolean;
     filmSearch?: boolean;
+    searchQ?: string;
     typeFilter?: MediaType | "all" | null;
     videoDuration?: "medium" | "long";
   },
@@ -250,6 +252,7 @@ async function searchLiveOnce(
       isUsableClip(row.r.title, row.r.channel, row.durationSec, {
         allowArtist: opts.artist,
         filmSearch: opts.filmSearch,
+        query: opts.searchQ,
       }),
     )
     .map((row: { r: Mapped }) => row.r);
@@ -280,6 +283,7 @@ async function searchLive(q: string, key: string, typeFilter?: MediaType | "all"
       const batch = await searchLiveOnce(searchQ, key, {
         artist,
         filmSearch,
+        searchQ: q,
         typeFilter,
         videoDuration: dur,
       });
@@ -293,6 +297,21 @@ async function searchLive(q: string, key: string, typeFilter?: MediaType | "all"
       if (merged.length >= 12) break;
     }
     if (merged.length >= 12) break;
+  }
+
+  if (filmSearch && merged.length > 1) {
+    const qLower = q.trim().toLowerCase();
+    const words = qLower.replace(/\b(movie|film|scene|4k|clip|official)\b/gi, "").trim().split(/\s+/).filter((w) => w.length > 2);
+    merged.sort((a, b) => {
+      const score = (r: SearchResult) => {
+        let s = r.viralScore;
+        if (/movieclips/i.test(r.channel)) s += 30;
+        if (KNOWN_FILM_TITLES.test(`${r.title} ${r.movie}`)) s += 12;
+        if (words.length && words.every((w) => `${r.title} ${r.movie} ${r.channel}`.toLowerCase().includes(w))) s += 18;
+        return s;
+      };
+      return score(b) - score(a);
+    });
   }
 
   const results: SearchResult[] = await Promise.all(

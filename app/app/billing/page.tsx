@@ -137,7 +137,7 @@ export default function BillingPage() {
           <p className="plan-card-sub">{PRICING.CREDITS_10.tagline}</p>
           <ul className="plan-features">
             <li>✓ 10 exports 4K sans abonnement</li>
-            <li>✓ Même pipeline IA que Creator</li>
+            <li>✓ Mêmes outils IA que Creator</li>
             <li>✓ Crédits cumulables sur ton compte</li>
           </ul>
           <button

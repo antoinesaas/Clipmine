@@ -13,6 +13,7 @@ import {
   AI_TOOL_LABELS,
   allowedToolsForPlan,
   defaultToolsForPlan,
+  reconcileToolSelection,
   type AiToolId,
   type PlanTier,
 } from "@/lib/video-tools";
@@ -138,14 +139,21 @@ export function ExportModal({
 
   function toggleTool(id: AiToolId) {
     if (!allowed.includes(id)) return;
-    setTools((prev) =>
-      prev.includes(id) ? prev.filter((t) => t !== id) : [...prev, id],
-    );
+    setTools((prev) => {
+      let next = prev.includes(id) ? prev.filter((t) => t !== id) : [...prev, id];
+      if (id === "slowmo" && next.includes("slowmo")) {
+        next = next.filter((t) => t !== "fps");
+      }
+      if (id === "fps" && next.includes("fps")) {
+        next = next.filter((t) => t !== "slowmo");
+      }
+      return reconcileToolSelection(next);
+    });
   }
 
   function setEnhanceOn(on: boolean) {
     setEnhance(on);
-    if (on) setTools(defaultToolsForPlan(plan, true));
+    if (on) setTools(reconcileToolSelection(defaultToolsForPlan(plan, true)));
     else setTools([]);
   }
 
@@ -161,7 +169,7 @@ export function ExportModal({
           ratio,
           quality,
           enhance,
-          tools: enhance ? tools : [],
+          tools: enhance ? reconcileToolSelection(tools) : [],
         }),
       });
       if (r.status === 402) {
@@ -257,8 +265,8 @@ export function ExportModal({
 
       <div className="toggle-row">
         <div>
-          <div style={{ fontWeight: 600, fontSize: 14 }}>Pipeline IA</div>
-          <div style={{ fontSize: 12, color: "var(--dim)" }}>Upscale 4K, denoise, stabilisation, 60fps…</div>
+          <div style={{ fontWeight: 600, fontSize: 14 }}>Outils IA</div>
+          <div style={{ fontSize: 12, color: "var(--dim)" }}>Upscale, denoise, stabilisation, 60 fps ou slow-mo</div>
         </div>
         <button
           type="button"
@@ -276,12 +284,15 @@ export function ExportModal({
             const meta = AI_TOOL_LABELS[id];
             const on = tools.includes(id);
             const can = allowed.includes(id);
+            const blockedBySlowmo = id === "fps" && tools.includes("slowmo");
+            const blockedByFps = id === "slowmo" && tools.includes("fps");
+            const disabled = !can || blockedBySlowmo || blockedByFps;
             return (
               <button
                 key={id}
                 type="button"
-                className={`ai-tool-chip ${on ? "on" : ""} ${!can ? "off" : ""}`}
-                disabled={!can}
+                className={`ai-tool-chip ${on ? "on" : ""} ${disabled ? "off" : ""}`}
+                disabled={disabled}
                 onClick={() => toggleTool(id)}
               >
                 <span className="ai-tool-model">{meta.model}</span>

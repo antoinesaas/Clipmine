@@ -61,7 +61,7 @@ export function planBullets(plan: "FREE" | "CREATOR" | "PRO"): Bullet[] {
       { text: "1 export 4K offert", bold: true },
       { text: "Recadrage 9:16 / 16:9" },
       { text: "Upscale & modèles IA", off: true },
-      { text: "Denoise, stabilisation, 60fps", off: true },
+      { text: "Denoise, 60fps, stabilisation", off: true },
     ];
   }
   if (plan === "CREATOR") {

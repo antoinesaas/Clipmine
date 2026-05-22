@@ -1,6 +1,6 @@
 "use client";
 
-import { UserButton, useClerk } from "@clerk/nextjs";
+import { UserButton, useClerk, useUser } from "@clerk/nextjs";
 import { toast } from "sonner";
 
 const clerkDarkMenu = {
@@ -25,6 +25,7 @@ const clerkDarkMenu = {
 
 export default function AppUserButton() {
   const { signOut } = useClerk();
+  const { user } = useUser();
 
   async function openBillingPortal() {
     try {
@@ -44,6 +45,28 @@ export default function AppUserButton() {
     }
   }
 
+  async function deleteAccount() {
+    if (
+      !window.confirm(
+        "Supprimer définitivement ton compte ClipMine ? Cette action est irréversible.",
+      )
+    ) {
+      return;
+    }
+    try {
+      const r = await fetch("/api/account", { method: "DELETE" });
+      if (!r.ok) {
+        const data = await r.json();
+        toast.error(data.message ?? "Impossible de supprimer le compte.");
+        return;
+      }
+      await user?.delete();
+      await signOut({ redirectUrl: "/" });
+    } catch {
+      toast.error("Erreur lors de la suppression.");
+    }
+  }
+
   return (
     <UserButton afterSignOutUrl="/" appearance={clerkDarkMenu}>
       <UserButton.MenuItems>
@@ -56,6 +79,15 @@ export default function AppUserButton() {
             </svg>
           }
           onClick={() => openBillingPortal()}
+        />
+        <UserButton.Action
+          label="Supprimer mon compte"
+          labelIcon={
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6" />
+            </svg>
+          }
+          onClick={() => deleteAccount()}
         />
         <UserButton.Action
           label="Se déconnecter"

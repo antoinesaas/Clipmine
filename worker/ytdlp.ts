@@ -59,6 +59,11 @@ type Strategy = { label: string; extra: string[]; format: string[] };
 
 const STRATEGIES: Strategy[] = [
   {
+    label: "web",
+    extra: ["--extractor-args", "youtube:player_client=web"],
+    format: ["-f", "bv*[height<=1080][ext=mp4]+ba[ext=m4a]/b[height<=1080]/best[ext=mp4]/best"],
+  },
+  {
     label: "android+embed",
     extra: ["--extractor-args", "youtube:player_client=android,web_embedded,tv_embedded;player_skip=webpage"],
     format: ["-f", "bv*[height<=1080][ext=mp4]+ba[ext=m4a]/b[height<=1080]/best[ext=mp4]/best"],

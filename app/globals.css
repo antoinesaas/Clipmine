@@ -1701,6 +1701,17 @@ footer {
 }
 
 .plan-stack { display: flex; flex-direction: column; gap: 10px; }
+@media (min-width: 769px) {
+  .app-page-billing .plan-stack {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+  }
+  .app-page-billing .plan-stack > .plan-card:last-child {
+    grid-column: 1 / -1;
+    max-width: calc(50% - 7px);
+  }
+}
 .plan-min {
   display: flex; align-items: center; justify-content: space-between;
   padding: 16px; background: var(--surface); border: 1px solid var(--line);
@@ -1733,6 +1744,13 @@ footer {
 .plan-card-head span { font-size: 13px; color: var(--mut); }
 .plan-card-head s { opacity: 0.55; margin-left: 4px; }
 .plan-card-sub { font-size: 12px; color: var(--dim); margin-top: -6px; }
+.plan-card .btn-mine {
+  width: auto;
+  min-width: 160px;
+  max-width: 100%;
+  align-self: flex-start;
+  padding: 11px 20px;
+}
 .plan-features {
   list-style: none;
   display: flex;
@@ -1924,6 +1942,7 @@ footer {
     padding: 14px;
   }
   .plan-min .btn-mine { width: 100%; padding: 12px; text-align: center; }
+  .plan-card .btn-mine { width: 100%; align-self: stretch; text-align: center; }
 
   .modal { padding: 18px 14px calc(18px + env(safe-area-inset-bottom, 0px)); }
   .clip-sheet { padding: 18px 14px calc(18px + env(safe-area-inset-bottom, 0px)); }

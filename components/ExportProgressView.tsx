@@ -142,9 +142,6 @@ export default function ExportProgressView({
                     ))}
                   </ul>
                 )}
-                {active && stepId === "download" && (
-                  <p className="export-progress-sub">yt-dlp · contournement anti-bot</p>
-                )}
               </li>
             );
           })}
