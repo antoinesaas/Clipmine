@@ -16,11 +16,11 @@ Guide pour activer toutes les fonctionnalités en production (Vercel + worker Fl
 | `WORKER_URL` / `WORKER_SECRET` | Pipeline ffmpeg sur Fly.io |
 | Clerk + `CRON_SECRET` | ✅ déjà configurés |
 
-### Supabase (projet `hhfojclzmtxnvvnqnhfl`)
+### Supabase (projet `elwqdulkxprjmkejwcai`)
 
-Tables Prisma **`User`** + **`Download`** déjà créées via migration `clipmine_init`.
+Tables Prisma **`User`** + **`Download`** via migration `clipmine_init`.
 
-1. [Supabase → Database → Connection string](https://supabase.com/dashboard/project/hhfojclzmtxnvvnqnhfl/settings/database)
+1. [Supabase → Database → Connection string](https://supabase.com/dashboard/project/elwqdulkxprjmkejwcai/settings/database)
 2. Copie **URI** (mode Transaction pooler → `DATABASE_URL`)
 3. Copie **URI** (mode Direct → `DIRECT_URL`)
 4. Remplace `PASSWORD` par le mot de passe DB
