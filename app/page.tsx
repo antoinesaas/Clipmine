@@ -120,47 +120,56 @@ export default function Landing() {
             <span className="grad">Exporte en 9:16 · 4K.</span>
           </h1>
           <p className="sub">
-            Films et séries uniquement — comme une base de répliques pour éditeurs.
-            Colle un lien YouTube ou tape une scène. Recadrage auto, upscale IA.
+            Films & séries pour éditeurs TikTok.
+            Colle un lien YouTube ou cherche une scène — export 9:16 en 4K.
           </p>
 
           <div className="search-box">
             <div className="search-shell">
-              {isYoutubeUrl(query) ? (
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FF4444" strokeWidth="2">
-                  <path d="M22.54 6.42a2.78 2.78 0 0 0-1.95-1.96C18.88 4 12 4 12 4s-6.88 0-8.59.46A2.78 2.78 0 0 0 1.46 6.42 29 29 0 0 0 1 12a29 29 0 0 0 .46 5.58 2.78 2.78 0 0 0 1.95 1.96C5.12 20 12 20 12 20s6.88 0 8.59-.46a2.78 2.78 0 0 0 1.96-1.96A29 29 0 0 0 23 12a29 29 0 0 0-.46-5.58z" />
-                  <polygon points="9.75 15.02 15.5 12 9.75 8.98 9.75 15.02" fill="#FF4444" stroke="none" />
-                </svg>
-              ) : (
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <circle cx="11" cy="11" r="7" /><path d="m21 21-4.3-4.3" />
-                </svg>
-              )}
-              <input
-                className="search-input"
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    e.preventDefault();
-                    if (isSignedIn) goSearch();
-                  }
-                }}
-                placeholder="Réplique, film, série… ou lien YouTube"
-              />
-              <AuthSearchButton query={query || "Inception movie scene 4k"} className="btn btn-primary">
+              <div className="search-input-row">
+                {isYoutubeUrl(query) ? (
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FF4444" strokeWidth="2">
+                    <path d="M22.54 6.42a2.78 2.78 0 0 0-1.95-1.96C18.88 4 12 4 12 4s-6.88 0-8.59.46A2.78 2.78 0 0 0 1.46 6.42 29 29 0 0 0 1 12a29 29 0 0 0 .46 5.58 2.78 2.78 0 0 0 1.95 1.96C5.12 20 12 20 12 20s6.88 0 8.59-.46a2.78 2.78 0 0 0 1.96-1.96A29 29 0 0 0 23 12a29 29 0 0 0-.46-5.58z" />
+                    <polygon points="9.75 15.02 15.5 12 9.75 8.98 9.75 15.02" fill="#FF4444" stroke="none" />
+                  </svg>
+                ) : (
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <circle cx="11" cy="11" r="7" /><path d="m21 21-4.3-4.3" />
+                  </svg>
+                )}
+                <input
+                  className="search-input"
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      if (isSignedIn) goSearch();
+                    }
+                  }}
+                  placeholder="Film, scène ou lien YouTube"
+                />
+              </div>
+              <AuthSearchButton query={query || "Inception movie scene 4k"} className="btn btn-primary btn-mine-hero">
                 Mine →
               </AuthSearchButton>
             </div>
-            <div className="chips">
-              {CHIPS.map(([label, q]) => (
-                <AuthSearchButton key={q} query={q} className="chip">
-                  {label}
-                </AuthSearchButton>
-              ))}
+            <div className="chips-scroll">
+              <div className="chips">
+                {CHIPS.map(([label, q]) => (
+                  <AuthSearchButton key={q} query={q} className="chip">
+                    {label}
+                  </AuthSearchButton>
+                ))}
+                {TRENDING_FILMS.filter(([label]) => !CHIPS.some(([chipLabel]) => chipLabel === label)).map(([label, q]) => (
+                  <AuthSearchButton key={`t-${q}`} query={q} className="chip chip-trend">
+                    {label}
+                  </AuthSearchButton>
+                ))}
+              </div>
             </div>
             <div className="hero-note">
-              Films & séries · lien YouTube accepté · export 4K
+              Films & séries · lien YouTube · export 4K
             </div>
           </div>
         </div>
