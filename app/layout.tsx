@@ -34,6 +34,9 @@ export const metadata: Metadata = {
   verification: {
     google: "Fumx5QHDih4MJ6PdWDZUSWBGnQ6p1eSyhfm3Ql9dtPI",
   },
+  alternates: {
+    canonical: "https://clipmine.fr",
+  },
   robots: {
     index: true,
     follow: true,

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { SUPPORT_EMAIL } from "@/lib/constants";
 import { SignedIn, SignedOut, SignInButton, UserButton } from "@clerk/nextjs";
 import { DEMO_CLIPS, thumbForId } from "@/lib/demo-clips";
 
@@ -343,16 +344,15 @@ export default function UpscalePage() {
           <div className="foot-col">
             <h4>Société</h4>
             <ul>
-              <li><a href="mailto:contact@clipmine.fr">Contact</a></li>
+              <li><a href={`mailto:${SUPPORT_EMAIL}`}>Contact</a></li>
               <li><Link href="/cgu">CGU</Link></li>
               <li><Link href="/mentions-legales">Mentions légales</Link></li>
             </ul>
           </div>
           <div className="foot-col">
-            <h4>Ressources</h4>
+            <h4>Support</h4>
             <ul>
-              <li><a href="https://github.com/antoinesaas/Clipmine" target="_blank" rel="noopener noreferrer">GitHub</a></li>
-              <li><a href="mailto:contact@clipmine.fr">Support</a></li>
+              <li><a href={`mailto:${SUPPORT_EMAIL}`}>{SUPPORT_EMAIL}</a></li>
             </ul>
           </div>
         </div>

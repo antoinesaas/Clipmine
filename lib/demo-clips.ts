@@ -111,3 +111,109 @@ export function searchDemo(q: string, max = 16, typeFilter?: MediaType | "all"):
 export function clipsForHero(): string[] {
   return [...new Set(DEMO_CLIPS.map((c) => c.youtubeId))].map(thumbForId);
 }
+
+export function buildHeroBgRows(): string[][] {
+  const thumbs = clipsForHero();
+  return [0, 1, 2].map((i) => {
+    const rotated = [...thumbs.slice(i), ...thumbs.slice(0, i)];
+    return Array.from({ length: 14 }, (_, j) => rotated[j % rotated.length]);
+  });
+}
+
+export type FeatureDemo = {
+  id: string;
+  youtubeId: string;
+  thumb: string;
+  title: string;
+  subtitle: string;
+  badge: string;
+  note: string;
+  beforeFilter: string;
+  afterFilter: string;
+  beforeTransform?: string;
+  backgroundSize?: string;
+  backgroundPosition?: string;
+};
+
+/** Démos « En action » — une fonctionnalité ClipMine par carte, rendu 9:16 simulé */
+export const FEATURE_SHOWCASE: FeatureDemo[] = [
+  {
+    id: "crop916",
+    youtubeId: "vetKTtM7YyU",
+    thumb: thumbForId("vetKTtM7YyU"),
+    title: "Recadrage 9:16",
+    subtitle: "Autocrop vertical pour TikTok / Reels",
+    badge: "9:16",
+    note: "ClipMine détecte le sujet et recadre automatiquement en vertical prêt à publier.",
+    beforeFilter: "brightness(0.8) saturate(0.85)",
+    afterFilter: "brightness(1.05) saturate(1.1)",
+    backgroundSize: "220% auto",
+    backgroundPosition: "center center",
+  },
+  {
+    id: "upscale4k",
+    youtubeId: "P2tfZksgEy4",
+    thumb: thumbForId("P2tfZksgEy4"),
+    title: "Upscale Starlight 4K",
+    subtitle: "720p YouTube → 4K cinéma",
+    badge: "4K",
+    note: "Modèle Starlight : reconstruction pixel par pixel, netteté et détails restaurés.",
+    beforeFilter: "blur(2px) brightness(0.82) contrast(0.9)",
+    afterFilter: "contrast(1.12) saturate(1.15) brightness(1.04)",
+    backgroundSize: "cover",
+    backgroundPosition: "center 35%",
+  },
+  {
+    id: "stabilize",
+    youtubeId: "mqqft2x_Aa4",
+    thumb: thumbForId("mqqft2x_Aa4"),
+    title: "Stabilisation Themis",
+    subtitle: "Compensation tremblements caméra",
+    badge: "STABLE",
+    note: "Themis lisse les mouvements de caméra pour un rendu gimbal pro.",
+    beforeFilter: "brightness(0.9)",
+    afterFilter: "brightness(1.02) contrast(1.05)",
+    beforeTransform: "rotate(-1.8deg) scale(1.08)",
+    backgroundSize: "cover",
+    backgroundPosition: "center",
+  },
+  {
+    id: "denoise",
+    youtubeId: "uRJQJcy3f8w",
+    thumb: thumbForId("uRJQJcy3f8w"),
+    title: "Denoise Nyx",
+    subtitle: "Scènes sombres sans bruit numérique",
+    badge: "DENOISE",
+    note: "Nyx supprime le bruit low-light tout en gardant le grain cinéma.",
+    beforeFilter: "brightness(0.55) contrast(1.2) saturate(0.7)",
+    afterFilter: "brightness(0.95) contrast(1.05) saturate(1.05)",
+    backgroundSize: "cover",
+    backgroundPosition: "center",
+  },
+  {
+    id: "enhance",
+    youtubeId: "zSWdZVtXT7E",
+    thumb: thumbForId("zSWdZVtXT7E"),
+    title: "Enhance Proteus",
+    subtitle: "Netteté et détails révélés",
+    badge: "ENHANCE",
+    note: "Proteus corrige compression YouTube et rétablit les micro-détails.",
+    beforeFilter: "blur(1px) saturate(0.75) contrast(0.88)",
+    afterFilter: "saturate(1.2) contrast(1.1) brightness(1.03)",
+    backgroundSize: "cover",
+    backgroundPosition: "center 40%",
+  },
+  {
+    id: "slowmo",
+    youtubeId: "i9zjvUywVG8",
+    thumb: thumbForId("i9zjvUywVG8"),
+    title: "Slow-motion Chronos",
+    subtitle: "Ralenti fluide généré par IA",
+    badge: "60FPS",
+    note: "Chronos étire le temps avec interpolation IA jusqu'à 120fps.",
+    beforeFilter: "brightness(0.88) contrast(0.95)",
+    afterFilter: "brightness(1.04) contrast(1.08) saturate(1.08)",
+    backgroundSize: "cover",
+    backgroundPosition: "center",
+  },
+];

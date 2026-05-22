@@ -1,11 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { SignedIn, SignedOut, SignInButton, UserButton, useAuth } from "@clerk/nextjs";
+import { useState } from "react";
+import { SignedIn, SignedOut, UserButton, useAuth, useClerk } from "@clerk/nextjs";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { DEMO_CLIPS, TRENDING_FILMS, thumbForId, clipsForHero } from "@/lib/demo-clips";
+import { TRENDING_FILMS, thumbForId, clipsForHero, buildHeroBgRows, DEMO_CLIPS } from "@/lib/demo-clips";
 import AuthSearchButton from "@/components/AuthSearchButton";
+import CheckoutButton from "@/components/CheckoutButton";
+import FeatureShowcase from "@/components/FeatureShowcase";
+import { SUPPORT_EMAIL } from "@/lib/constants";
 
 const CHIPS = [
   ["Inception", "Inception movie scene"],
@@ -38,23 +41,20 @@ function isYoutubeUrl(s: string) {
 export default function Landing() {
   const router = useRouter();
   const { isSignedIn } = useAuth();
-  const [bgRows, setBgRows] = useState<string[][]>([]);
+  const { openSignIn } = useClerk();
+  const [bgRows] = useState(() => buildHeroBgRows());
   const [query, setQuery] = useState("");
   const [comparePos, setComparePos] = useState(50);
 
-  useEffect(() => {
-    const thumbs = clipsForHero();
-    setBgRows([0, 1, 2].map((i) => {
-      const rotated = [...thumbs.slice(i), ...thumbs.slice(0, i)];
-      return Array.from({ length: 14 }, (_, j) => rotated[j % rotated.length]);
-    }));
-  }, []);
-
   function goSearch(q?: string) {
-    const term = (q ?? query).trim();
-    if (!term) return;
+    const term = (q ?? query).trim() || "Inception movie scene 4k";
     setQuery(term);
-    router.push(`/app/search?q=${encodeURIComponent(term)}`);
+    const href = `/app/search?q=${encodeURIComponent(term)}`;
+    if (isSignedIn) {
+      router.push(href);
+      return;
+    }
+    openSignIn({ forceRedirectUrl: href });
   }
 
   function searchUrl(q?: string) {
@@ -80,16 +80,14 @@ export default function Landing() {
             <a href="#demos">Démos</a>
             <a href="#pricing">Tarifs</a>
             <Link href="/upscale">Upscale</Link>
-            <SignedOut><SignInButton mode="modal"><a>Connexion</a></SignInButton></SignedOut>
+            <SignedOut><button type="button" className="nav-link-btn" onClick={() => openSignIn()}>Connexion</button></SignedOut>
             <SignedIn><Link href="/app/search">Mon espace</Link></SignedIn>
           </div>
           <SignedOut>
-            <SignInButton mode="modal">
-              <button type="button" className="btn btn-primary btn-nav-cta">
-                <span className="only-desktop">Essayer gratuitement</span>
-                <span className="only-mobile">Essayer</span>
-              </button>
-            </SignInButton>
+            <button type="button" className="btn btn-primary btn-nav-cta" onClick={() => openSignIn({ forceRedirectUrl: "/app/search" })}>
+              <span className="only-desktop">Essayer gratuitement</span>
+              <span className="only-mobile">Essayer</span>
+            </button>
           </SignedOut>
           <SignedIn><UserButton afterSignOutUrl="/" /></SignedIn>
         </div>
@@ -144,7 +142,7 @@ export default function Landing() {
                   onKeyDown={(e) => {
                     if (e.key === "Enter") {
                       e.preventDefault();
-                      if (isSignedIn) goSearch();
+                      goSearch();
                     }
                   }}
                   placeholder="Film, scène ou lien YouTube"
@@ -268,37 +266,16 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* DEMOS - VRAIS CLIPS YOUTUBE */}
+      {/* DEMOS — résultats ClipMine par fonctionnalité */}
       <section id="demos">
         <div className="wrap">
           <div className="eyebrow">En action</div>
-          <h2 className="h2">Scènes films & séries.</h2>
+          <h2 className="h2">Ce que ClipMine produit.</h2>
           <p className="sec-sub">
-            Inspire-toi de ta scène, exporte en 9:16 pour ton prochain édit TikTok.
+            Chaque carte montre le rendu final : recadrage 9:16, upscale 4K, stabilisation, denoise… Clique pour lire la vidéo.
           </p>
 
-          <div className="demo-grid">
-            {DEMO_CLIPS.slice(0, 8).map((c) => (
-              <AuthSearchButton
-                key={c.youtubeId}
-                query={`${c.movie} ${c.scene} 4k`}
-                className="demo demo-btn"
-              >
-                <span
-                  className="demo-bg"
-                  style={{ backgroundImage: `url(${thumbForId(c.youtubeId)})` }}
-                />
-                <span className="badge-4k">4K · 9:16</span>
-                <span className="play">
-                  <svg width="22" height="22" viewBox="0 0 24 24" fill="white">
-                    <path d="M8 5v14l11-7z" />
-                  </svg>
-                </span>
-                <span className="lbl">{c.movie} — {c.scene}</span>
-                <span className="demo-transcript">&ldquo;{c.transcript}&rdquo;</span>
-              </AuthSearchButton>
-            ))}
-          </div>
+          <FeatureShowcase />
         </div>
       </section>
 
@@ -347,9 +324,9 @@ export default function Landing() {
                 <li>{Check()}Autocrop basique 9:16 / 16:9</li>
                 <li className="off">{Check()}Enhance IA</li>
               </ul>
-              <SignInButton mode="modal" forceRedirectUrl="/app/search">
-                <button type="button" className="btn btn-ghost">Commencer</button>
-              </SignInButton>
+              <button type="button" className="btn btn-ghost" onClick={() => openSignIn({ forceRedirectUrl: "/app/search" })}>
+                Commencer
+              </button>
             </div>
 
             <div className="plan feat-plan">
@@ -364,9 +341,9 @@ export default function Landing() {
                 <li>{Check()}Tous les modèles AI</li>
                 <li>{Check()}Hook Finder</li>
               </ul>
-              <SignInButton mode="modal" forceRedirectUrl="/app/billing">
-                <button type="button" className="btn btn-primary">Passer Creator</button>
-              </SignInButton>
+              <CheckoutButton plan="CREATOR" className="btn btn-primary">
+                Passer Creator
+              </CheckoutButton>
             </div>
 
             <div className="plan">
@@ -380,9 +357,9 @@ export default function Landing() {
                 <li>{Check()}Accès API</li>
                 <li>{Check()}Support prioritaire</li>
               </ul>
-              <SignInButton mode="modal" forceRedirectUrl="/app/billing">
-                <button type="button" className="btn btn-ghost">Passer Pro</button>
-              </SignInButton>
+              <CheckoutButton plan="PRO" className="btn btn-ghost">
+                Passer Pro
+              </CheckoutButton>
             </div>
           </div>
         </div>
@@ -394,9 +371,9 @@ export default function Landing() {
           <div className="cta">
             <h2>Ton prochain édit viral<br />commence ici.</h2>
             <p>Premier export 4K offert. Pas de carte. Pas d'excuse.</p>
-            <SignInButton mode="modal" forceRedirectUrl="/app/search">
-              <button type="button" className="btn btn-primary btn-lg">Miner mon premier clip →</button>
-            </SignInButton>
+            <button type="button" className="btn btn-primary btn-lg" onClick={() => openSignIn({ forceRedirectUrl: "/app/search" })}>
+              Miner mon premier clip →
+            </button>
           </div>
         </div>
       </section>
@@ -424,16 +401,15 @@ export default function Landing() {
           <div className="foot-col">
             <h4>Société</h4>
             <ul>
-              <li><a href="mailto:contact@clipmine.fr">Contact</a></li>
+              <li><a href={`mailto:${SUPPORT_EMAIL}`}>Contact</a></li>
               <li><Link href="/cgu">CGU</Link></li>
               <li><Link href="/mentions-legales">Mentions légales</Link></li>
             </ul>
           </div>
           <div className="foot-col">
-            <h4>Ressources</h4>
+            <h4>Support</h4>
             <ul>
-              <li><a href="https://github.com/antoinesaas/Clipmine" target="_blank" rel="noopener noreferrer">GitHub</a></li>
-              <li><a href="mailto:contact@clipmine.fr">Support</a></li>
+              <li><a href={`mailto:${SUPPORT_EMAIL}`}>{SUPPORT_EMAIL}</a></li>
             </ul>
           </div>
         </div>

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { SUPPORT_EMAIL } from "@/lib/constants";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -33,7 +34,7 @@ export default function MentionsLegales() {
               <ul>
                 <li><strong>Nom :</strong> Antoine Saas</li>
                 <li><strong>Statut :</strong> Auto-entrepreneur / Entrepreneur individuel</li>
-                <li><strong>Email :</strong> <a href="mailto:contact@clipmine.fr">contact@clipmine.fr</a></li>
+                <li><strong>Email :</strong> <a href={`mailto:${SUPPORT_EMAIL}`}>{SUPPORT_EMAIL}</a></li>
               </ul>
               <p className="legal-note">Numéro SIRET et adresse à compléter lors de l&apos;immatriculation.</p>
             </section>
@@ -94,7 +95,7 @@ export default function MentionsLegales() {
                 <li>Droit à la portabilité</li>
                 <li>Droit d&apos;opposition et de limitation</li>
               </ul>
-              <p>Pour exercer ces droits : <a href="mailto:contact@clipmine.fr">contact@clipmine.fr</a>. Réclamation possible auprès de la <strong>CNIL</strong> (<a href="https://www.cnil.fr" target="_blank" rel="noopener noreferrer">cnil.fr</a>).</p>
+              <p>Pour exercer ces droits : <a href={`mailto:${SUPPORT_EMAIL}`}>{SUPPORT_EMAIL}</a>. Réclamation possible auprès de la <strong>CNIL</strong> (<a href="https://www.cnil.fr" target="_blank" rel="noopener noreferrer">cnil.fr</a>).</p>
             </section>
 
             <section>
@@ -105,7 +106,7 @@ export default function MentionsLegales() {
             <section>
               <h2>8. Contact</h2>
               <ul>
-                <li><strong>Email :</strong> <a href="mailto:contact@clipmine.fr">contact@clipmine.fr</a></li>
+                <li><strong>Email :</strong> <a href={`mailto:${SUPPORT_EMAIL}`}>{SUPPORT_EMAIL}</a></li>
                 <li><strong>Site :</strong> <a href="https://clipmine.fr">clipmine.fr</a></li>
               </ul>
             </section>

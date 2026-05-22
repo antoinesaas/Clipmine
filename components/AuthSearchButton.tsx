@@ -1,6 +1,6 @@
 "use client";
 
-import { SignInButton, useAuth } from "@clerk/nextjs";
+import { useClerk, useAuth } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 
 export function searchHref(q: string) {
@@ -19,30 +19,23 @@ export default function AuthSearchButton({
   onClick?: () => void;
 }) {
   const { isSignedIn } = useAuth();
+  const { openSignIn } = useClerk();
   const router = useRouter();
   const href = searchHref(query);
 
-  if (isSignedIn) {
-    return (
-      <button
-        type="button"
-        className={className}
-        onClick={() => {
-          onClick?.();
-          router.push(href);
-        }}
-      >
-        {children}
-      </button>
-    );
+  function handleClick() {
+    onClick?.();
+    if (isSignedIn) {
+      router.push(href);
+      return;
+    }
+    openSignIn({ forceRedirectUrl: href });
   }
 
   return (
-    <SignInButton mode="modal" forceRedirectUrl={href}>
-      <button type="button" className={className} onClick={onClick}>
-        {children}
-      </button>
-    </SignInButton>
+    <button type="button" className={className} onClick={handleClick}>
+      {children}
+    </button>
   );
 }
 
@@ -55,23 +48,9 @@ export function AuthSearchLink({
   className?: string;
   children: React.ReactNode;
 }) {
-  const { isSignedIn } = useAuth();
-  const router = useRouter();
-  const href = searchHref(query);
-
-  if (isSignedIn) {
-    return (
-      <button type="button" className={className} onClick={() => router.push(href)}>
-        {children}
-      </button>
-    );
-  }
-
   return (
-    <SignInButton mode="modal" forceRedirectUrl={href}>
-      <button type="button" className={className}>
-        {children}
-      </button>
-    </SignInButton>
+    <AuthSearchButton query={query} className={className}>
+      {children}
+    </AuthSearchButton>
   );
 }
