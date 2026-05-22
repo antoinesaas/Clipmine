@@ -34,3 +34,20 @@ Clés S3 : voir **`docs/CLOUDFLARE-R2.md`** → [Manage R2 API Tokens](https://d
 Puis `.env.infra` + `powershell -File scripts/setup-vercel-infra.ps1`
 
 Sans R2, les exports restent en file d’attente (statut `processing` en DB).
+
+## Pipeline IA (v2)
+
+| Modèle UI | ID outil | Traitement ffmpeg |
+|-----------|----------|-------------------|
+| Starlight | upscale | Scale 4K Lanczos |
+| Proteus | enhance | unsharp + eq |
+| Nyx | denoise | hqdn3d |
+| Themis | stabilize | deshake |
+| Aion | fps | minterpolate 60fps |
+| Chronos | slowmo | setpts + atempo (plan Pro) |
+
+Option : `MAX_CLIP_SEC=180` (limite durée, évite timeout Fly).
+
+```bash
+cd worker && fly deploy
+```

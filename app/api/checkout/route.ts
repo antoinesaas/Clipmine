@@ -17,7 +17,14 @@ export async function POST(req: NextRequest) {
 
   const { plan } = await req.json();
   const priceId = PRICES[plan as keyof typeof PRICES];
-  if (!priceId) return NextResponse.json({ error: "invalid_plan" }, { status: 400 });
+  if (!priceId) {
+    return NextResponse.json({
+      error: "invalid_plan",
+      message: plan === "PRO"
+        ? "Tarif Pro indisponible. Contacte le support."
+        : "Plan invalide.",
+    }, { status: 400 });
+  }
 
   try {
     const clerkUser = await currentUser();

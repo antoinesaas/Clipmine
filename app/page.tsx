@@ -4,10 +4,11 @@ import { useState } from "react";
 import { SignedIn, SignedOut, UserButton, useAuth, useClerk } from "@clerk/nextjs";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { TRENDING_FILMS, thumbForId, clipsForHero, buildHeroBgRows, DEMO_CLIPS } from "@/lib/demo-clips";
+import { TRENDING_FILMS, clipsForHero, buildHeroBgRows, DEMO_CLIPS, thumbForId } from "@/lib/demo-clips";
 import AuthSearchButton from "@/components/AuthSearchButton";
 import PricingPlans from "@/components/PricingPlans";
 import FeatureShowcase from "@/components/FeatureShowcase";
+import ImageBeforeAfter from "@/components/ImageBeforeAfter";
 import { SUPPORT_EMAIL } from "@/lib/constants";
 
 const CHIPS = [
@@ -44,7 +45,6 @@ export default function Landing() {
   const { openSignIn } = useClerk();
   const [bgRows] = useState(() => buildHeroBgRows());
   const [query, setQuery] = useState("");
-  const [comparePos, setComparePos] = useState(50);
 
   function goSearch(q?: string) {
     const term = (q ?? query).trim() || "Inception movie scene 4k";
@@ -62,15 +62,9 @@ export default function Landing() {
     return term ? `/app/search?q=${encodeURIComponent(term)}` : "/app/search";
   }
 
-  function handleCompareMove(e: React.MouseEvent<HTMLDivElement>) {
-    const rect = e.currentTarget.getBoundingClientRect();
-    const x = ((e.clientX - rect.left) / rect.width) * 100;
-    setComparePos(Math.max(0, Math.min(100, x)));
-  }
-
   return (
     <>
-      <nav>
+      <nav className="site-nav">
         <div className="nav-in">
           <Link href="/" className="logo">
             <span className="dot" />Clip<span className="b">Mine</span>
@@ -94,22 +88,24 @@ export default function Landing() {
       </nav>
 
       <header className="hero">
-        <div className="clip-bg">
-          {bgRows.map((row, i) => (
-            <div key={i} className={`clip-row r${i + 1}`}>
-              {[...row, ...row].map((thumb, j) => (
-                <div
-                  key={j}
-                  className="clip-thumb"
-                  style={{ backgroundImage: `url(${thumb})` }}
-                />
-              ))}
-            </div>
-          ))}
+        <div className="hero-clips-zone">
+          <div className="clip-bg">
+            {bgRows.map((row, i) => (
+              <div key={i} className={`clip-row r${i + 1}`}>
+                {[...row, ...row].map((thumb, j) => (
+                  <div
+                    key={j}
+                    className="clip-thumb"
+                    style={{ backgroundImage: `url(${thumb})` }}
+                  />
+                ))}
+              </div>
+            ))}
+          </div>
+          <div className="hero-fade-clips" aria-hidden />
         </div>
-        <div className="hero-fade" />
-        <div className="hero-glow" />
-        <div className="hero-in wrap">
+
+        <div className="hero-in wrap hero-copy">
           <div className="badge">
             <span className="pulse" />FILMS · SÉRIES · ÉDITS TIKTOK
           </div>
@@ -121,7 +117,9 @@ export default function Landing() {
             Films & séries pour éditeurs TikTok.
             Colle un lien YouTube ou cherche une scène — export 9:16 en 4K.
           </p>
+        </div>
 
+        <div className="hero-search wrap">
           <div className="search-box">
             <div className="search-shell">
               <div className="search-input-row">
@@ -229,39 +227,19 @@ export default function Landing() {
           <div className="eyebrow">Comparateur</div>
           <h2 className="h2">Avant YouTube. Après ClipMine.</h2>
           <p className="sec-sub">
-            Glisse le curseur pour comparer le clip source compressé YouTube à la version ClipMine 4K upscalée.
+            Glisse le curseur : à gauche la source compressée, à droite le rendu ClipMine 4K (vidéo en boucle).
           </p>
 
-          <div
-            className="compare-wrap"
-            onMouseMove={handleCompareMove}
-            onTouchMove={(e) => {
-              const t = e.touches[0];
-              const rect = (e.currentTarget as HTMLDivElement).getBoundingClientRect();
-              const x = ((t.clientX - rect.left) / rect.width) * 100;
-              setComparePos(Math.max(0, Math.min(100, x)));
-            }}
-          >
-            <div className="compare">
-              <div
-                className="compare-img"
-                style={{
-                  backgroundImage: `url(${thumbForId(DEMO_CLIPS[1].youtubeId)})`,
-                  filter: "blur(2px) brightness(0.85) saturate(0.7)",
-                }}
-              />
-              <div
-                className="compare-img after"
-                style={{
-                  backgroundImage: `url(${thumbForId(DEMO_CLIPS[1].youtubeId)})`,
-                  clipPath: `inset(0 0 0 ${comparePos}%)`,
-                  filter: "saturate(1.15) contrast(1.05)",
-                }}
-              />
-              <div className="compare-label left">Source YouTube</div>
-              <div className="compare-label right">ClipMine 4K</div>
-              <div className="compare-handle" style={{ left: `${comparePos}%` }} />
-            </div>
+          <div className="compare-wrap compare-wrap-video">
+            <ImageBeforeAfter
+              image={thumbForId(DEMO_CLIPS[1].youtubeId)}
+              beforeFilter="blur(2px) brightness(0.82) saturate(0.72) contrast(0.88)"
+              afterFilter="saturate(1.2) contrast(1.12) brightness(1.05)"
+              beforeLabel="Source YouTube"
+              afterLabel="ClipMine 4K"
+              className="hero-ba"
+              aspect="16/9"
+            />
           </div>
         </div>
       </section>
@@ -272,7 +250,7 @@ export default function Landing() {
           <div className="eyebrow">En action</div>
           <h2 className="h2">Ce que ClipMine produit.</h2>
           <p className="sec-sub">
-            Chaque carte montre le rendu final : recadrage 9:16, upscale 4K, stabilisation, denoise… Clique pour lire la vidéo.
+            Chaque carte montre un avant/après vidéo : recadrage 9:16, upscale 4K, stabilisation, denoise… Glisse ou touche pour comparer.
           </p>
 
           <FeatureShowcase />

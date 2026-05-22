@@ -43,7 +43,8 @@ model Download {
   ratio       String   // "9:16" | "16:9" | "4:3"
   quality     String   // "4K" | "1080p"
   enhanced    Boolean  @default(false)
-  fileUrl     String?  // lien R2
-  status      String   @default("processing") // processing | ready | failed
+  fileUrl       String?  // lien R2
+  errorMessage  String?  // raison si failed
+  status        String   @default("processing") // processing | ready | failed
   createdAt   DateTime @default(now())
 }

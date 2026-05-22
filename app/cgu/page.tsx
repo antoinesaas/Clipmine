@@ -9,7 +9,7 @@ export const metadata: Metadata = {
 export default function CGU() {
   return (
     <>
-      <nav>
+      <nav className="site-nav">
         <div className="nav-in">
           <Link href="/" className="logo">
             <span className="dot" />Clip<span className="b">Mine</span>

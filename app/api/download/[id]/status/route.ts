@@ -10,7 +10,11 @@ export async function GET(_req: NextRequest, { params }: { params: { id: string 
   try {
     const dl = await prisma.download.findUnique({ where: { id: params.id } });
     if (!dl) return NextResponse.json({ error: "not_found" }, { status: 404 });
-    return NextResponse.json({ status: dl.status, fileUrl: dl.fileUrl });
+    return NextResponse.json({
+      status: dl.status,
+      fileUrl: dl.fileUrl,
+      errorMessage: dl.errorMessage ?? null,
+    });
   } catch {
     return NextResponse.json({ status: "queued", waitlist: true });
   }

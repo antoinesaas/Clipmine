@@ -7,8 +7,13 @@ export const stripe = hasStripe
   ? new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: "2024-06-20" })
   : (null as unknown as Stripe);
 
+/** Vercel CLI (PowerShell) peut ajouter \\r\\n aux price IDs — on nettoie avant Stripe. */
+function cleanPriceId(v: string | undefined): string {
+  return (v ?? "").trim().replace(/[\r\n]+/g, "");
+}
+
 export const PRICES = {
-  CREATOR: process.env.STRIPE_PRICE_CREATOR ?? "",
-  PRO: process.env.STRIPE_PRICE_PRO ?? "",
-  CREDITS_10: process.env.STRIPE_PRICE_CREDITS_10 ?? "",
+  CREATOR: cleanPriceId(process.env.STRIPE_PRICE_CREATOR),
+  PRO: cleanPriceId(process.env.STRIPE_PRICE_PRO),
+  CREDITS_10: cleanPriceId(process.env.STRIPE_PRICE_CREDITS_10),
 };

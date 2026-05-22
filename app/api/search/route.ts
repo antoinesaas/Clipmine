@@ -3,8 +3,10 @@ import { DEMO_CLIPS, searchDemo, thumbForId, groupByScene } from "@/lib/demo-cli
 import {
   augmentSearchQuery,
   inferMediaType,
-  isFilmOrSeries,
+  isUsableClip,
+  isArtistQuery,
   extractMovieTitle,
+  parseDurationSeconds,
 } from "@/lib/film-filter";
 import type { MediaType } from "@/lib/film-filter";
 import { fetchTranscriptSnippet } from "@/lib/youtube-transcript";
@@ -177,7 +179,11 @@ export async function GET(req: NextRequest) {
     })),
     mode: "demo",
     sort,
-    hint: demo.length ? undefined : "Essaie un titre de film, une réplique, ou colle un lien YouTube.",
+    hint: demo.length
+      ? undefined
+      : isArtistQuery(q)
+        ? "Aucun clip trouvé. Essaie un autre artiste ou colle un lien YouTube direct."
+        : "Essaie un titre de film, une réplique, ou colle un lien YouTube.",
   });
 }
 
@@ -196,14 +202,18 @@ async function fetchVideo(id: string, key: string) {
   return mapResult(vr.items[0], { direct: true });
 }
 
-async function searchLive(q: string, key: string, typeFilter?: MediaType | "all" | null) {
+async function searchLiveOnce(
+  searchQ: string,
+  key: string,
+  opts: { artist: boolean; typeFilter?: MediaType | "all" | null },
+) {
   const searchUrl = new URL("https://www.googleapis.com/youtube/v3/search");
   searchUrl.searchParams.set("part", "snippet");
-  searchUrl.searchParams.set("q", `${augmentSearchQuery(q)} 4K`);
+  searchUrl.searchParams.set("q", searchQ);
   searchUrl.searchParams.set("type", "video");
-  searchUrl.searchParams.set("maxResults", "30");
+  searchUrl.searchParams.set("maxResults", "40");
   searchUrl.searchParams.set("videoDefinition", "high");
-  searchUrl.searchParams.set("videoCategoryId", "1");
+  if (!opts.artist) searchUrl.searchParams.set("videoCategoryId", "1");
   searchUrl.searchParams.set("order", "relevance");
   searchUrl.searchParams.set("key", key);
   const sr = await fetch(searchUrl).then((r) => r.json());
@@ -218,18 +228,53 @@ async function searchLive(q: string, key: string, typeFilter?: MediaType | "all"
   videosUrl.searchParams.set("key", key);
   const vr = await fetch(videosUrl).then((r) => r.json());
 
+  type Mapped = ReturnType<typeof mapResult> & { duration?: string };
+  const mapped = (vr.items ?? []).map((v: Parameters<typeof mapResult>[0]) => {
+    const r = mapResult(v);
+    const durationSec = parseDurationSeconds(v.contentDetails?.duration);
+    return { r, durationSec };
+  });
+
+  return mapped
+    .filter((row: { r: Mapped; durationSec: number | null }) =>
+      isUsableClip(row.r.title, row.r.channel, row.durationSec, { allowArtist: opts.artist }),
+    )
+    .map((row: { r: Mapped }) => row.r);
+}
+
+async function searchLive(q: string, key: string, typeFilter?: MediaType | "all" | null) {
+  const artist = isArtistQuery(q);
+  const queries = artist
+    ? [
+        augmentSearchQuery(q),
+        `${q.trim()} official music video`,
+        `${q.trim()} vevo 4k`,
+      ]
+    : [augmentSearchQuery(q)];
+
+  const seen = new Set<string>();
+  const merged: SearchResult[] = [];
+
+  for (const searchQ of queries) {
+    const batch = await searchLiveOnce(searchQ, key, { artist, typeFilter });
+    if (!batch) continue;
+    for (const r of batch) {
+      if (seen.has(r.youtubeId)) continue;
+      seen.add(r.youtubeId);
+      merged.push(r);
+      if (merged.length >= 16) break;
+    }
+    if (merged.length >= 8) break;
+  }
+
   const results: SearchResult[] = await Promise.all(
-    (vr.items ?? [])
-      .map((v: Parameters<typeof mapResult>[0]) => mapResult(v))
-      .filter((r: ReturnType<typeof mapResult>) => isFilmOrSeries(r.title, r.channel))
-      .slice(0, 12)
-      .map(async (r: SearchResult) => {
-        const transcript = await fetchTranscriptSnippet(r.youtubeId);
-        return { ...r, transcript: transcript ?? r.transcript };
-      })
+    merged.slice(0, 16).map(async (r) => {
+      const transcript = await fetchTranscriptSnippet(r.youtubeId);
+      return { ...r, transcript: transcript ?? r.transcript };
+    }),
   );
 
-  return filterByType(results, typeFilter);
+  return filterByType(results, artist ? "all" : typeFilter);
 }
 
 export const dynamic = "force-dynamic";

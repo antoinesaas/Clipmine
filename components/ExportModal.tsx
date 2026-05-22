@@ -7,13 +7,26 @@ import { PRICING, formatPrice } from "@/lib/plans";
 import type { ClipResult } from "./SearchPanel";
 import { saveExportLocal } from "./SearchPanel";
 import { embedUrl, thumbForId } from "@/lib/demo-clips";
+import {
+  AI_TOOL_IDS,
+  AI_TOOL_LABELS,
+  allowedToolsForPlan,
+  defaultToolsForPlan,
+  type AiToolId,
+  type PlanTier,
+} from "@/lib/video-tools";
 
 function useBodyLock(open: boolean) {
   useEffect(() => {
-    if (!open) return;
+    if (!open) {
+      document.body.style.overflow = "";
+      return;
+    }
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
-    return () => { document.body.style.overflow = prev; };
+    return () => {
+      document.body.style.overflow = prev || "";
+    };
   }, [open]);
 }
 
@@ -95,21 +108,40 @@ function ModalShell({
 
 export function ExportModal({
   clip,
+  plan: planProp = "FREE",
   waitlist,
   onClose,
   onPaywall,
   onDone,
 }: {
   clip: ClipResult;
+  plan?: PlanTier;
   waitlist?: boolean;
   onClose: () => void;
   onPaywall: () => void;
   onDone: () => void;
 }) {
+  const plan = planProp;
   const [ratio, setRatio] = useState("9:16");
   const [enhance, setEnhance] = useState(true);
   const [busy, setBusy] = useState(false);
+  const allowed = allowedToolsForPlan(plan, enhance);
+  const [tools, setTools] = useState<AiToolId[]>(() => defaultToolsForPlan(plan, true));
+
   useBodyLock(true);
+
+  function toggleTool(id: AiToolId) {
+    if (!allowed.includes(id)) return;
+    setTools((prev) =>
+      prev.includes(id) ? prev.filter((t) => t !== id) : [...prev, id],
+    );
+  }
+
+  function setEnhanceOn(on: boolean) {
+    setEnhance(on);
+    if (on) setTools(defaultToolsForPlan(plan, true));
+    else setTools([]);
+  }
 
   async function exportClip() {
     setBusy(true);
@@ -123,6 +155,7 @@ export function ExportModal({
           ratio,
           quality: "4K",
           enhance,
+          tools: enhance ? tools : [],
         }),
       });
       if (r.status === 402) {
@@ -189,18 +222,40 @@ export function ExportModal({
 
       <div className="toggle-row">
         <div>
-          <div style={{ fontWeight: 600, fontSize: 14 }}>Enhance IA</div>
-          <div style={{ fontSize: 12, color: "var(--dim)" }}>Upscale + stabilisation + 60fps</div>
+          <div style={{ fontWeight: 600, fontSize: 14 }}>Pipeline IA</div>
+          <div style={{ fontSize: 12, color: "var(--dim)" }}>Upscale 4K, denoise, stabilisation, 60fps…</div>
         </div>
         <button
           type="button"
           className={`switch ${enhance ? "on" : ""}`}
-          onClick={() => setEnhance(!enhance)}
+          onClick={() => setEnhanceOn(!enhance)}
           aria-pressed={enhance}
         >
           <span className="knob" />
         </button>
       </div>
+
+      {enhance && (
+        <div className="ai-tools-grid">
+          {AI_TOOL_IDS.map((id) => {
+            const meta = AI_TOOL_LABELS[id];
+            const on = tools.includes(id);
+            const can = allowed.includes(id);
+            return (
+              <button
+                key={id}
+                type="button"
+                className={`ai-tool-chip ${on ? "on" : ""} ${!can ? "off" : ""}`}
+                disabled={!can}
+                onClick={() => toggleTool(id)}
+              >
+                <span className="ai-tool-model">{meta.model}</span>
+                <span className="ai-tool-name">{meta.name}</span>
+              </button>
+            );
+          })}
+        </div>
+      )}
 
       <button
         type="button"

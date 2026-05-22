@@ -49,6 +49,11 @@ export function thumbForId(id: string) {
   return `https://i.ytimg.com/vi/${id}/hqdefault.jpg`;
 }
 
+/** Clip court pour démos avant/après (comparateur vidéo landing + cartes features). */
+export const DEMO_COMPARE_VIDEO =
+  "https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4";
+export const DEMO_COMPARE_POSTER = thumbForId("P2tfZksgEy4");
+
 export function embedUrl(id: string) {
   return `https://www.youtube.com/embed/${id}?rel=0&modestbranding=1`;
 }

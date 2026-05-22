@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { UserButton } from "@clerk/nextjs";
+import AppUserButton from "@/components/AppUserButton";
 
 const NAV = [
   { href: "/app/search", label: "Chercher", icon: "M21 21l-4.3-4.3M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16z" },
@@ -27,13 +27,13 @@ export default function AppShell({
         </Link>
         <div className="app-top-right">
           {quotaLabel && <span className="quota-badge">{quotaLabel}</span>}
-          <UserButton afterSignOutUrl="/" />
+          <AppUserButton />
         </div>
       </header>
 
       <main className="app-content">{children}</main>
 
-      <nav className="app-bottom-nav" aria-label="Navigation">
+      <div className="app-bottom-nav" role="navigation" aria-label="Navigation">
         {NAV.map((item) => {
           const active = path.startsWith(item.href);
           return (
@@ -45,7 +45,7 @@ export default function AppShell({
             </Link>
           );
         })}
-      </nav>
+      </div>
     </div>
   );
 }

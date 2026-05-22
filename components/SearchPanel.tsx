@@ -24,10 +24,8 @@ export type ClipResult = {
 const CHIPS: [string, string][] = [
   ["Inception", "Inception movie scene 4k"],
   ["Breaking Bad", "Breaking Bad series scene 4k"],
-  ["Dark Knight", "Dark Knight Joker scene 4k"],
   ["Interstellar", "Interstellar docking scene 4k"],
-  ["Oppenheimer", "Oppenheimer movie scene 4k"],
-  ["John Wick", "John Wick 4 fight scene 4k"],
+  ["Madison Beer", "Madison Beer official 4k"],
 ];
 
 type TypeFilter = "all" | MediaType;
@@ -36,7 +34,6 @@ type SortMode = "scene" | "popular";
 export default function SearchPanel({
   initialQuery = "",
   onSelect,
-  compact,
 }: {
   initialQuery?: string;
   onSelect: (clip: ClipResult) => void;
@@ -47,9 +44,9 @@ export default function SearchPanel({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [demoMode, setDemoMode] = useState(false);
-  const [ratio, setRatio] = useState("9:16");
   const [typeFilter, setTypeFilter] = useState<TypeFilter>("all");
   const [sort, setSort] = useState<SortMode>("scene");
+  const [showMoreChips, setShowMoreChips] = useState(false);
 
   useEffect(() => {
     if (initialQuery.trim()) runSearch(initialQuery, typeFilter, sort);
@@ -75,7 +72,7 @@ export default function SearchPanel({
         return;
       }
       if (!data.results?.length) {
-        setError(data.hint ?? "Aucune scène trouvée. Essaie un film, une réplique, ou colle un lien YouTube.");
+        setError(data.hint ?? "Aucun clip trouvé. Essaie un autre titre ou un lien YouTube.");
         return;
       }
       setResults(data.results);
@@ -99,99 +96,112 @@ export default function SearchPanel({
 
   return (
     <div className="search-panel">
-      {!compact && (
+      <div className="search-panel-controls">
         <p className="search-hint">
-          Meilleurs clips YouTube 4K · triés par scène · avec transcription.
-          Tape une réplique, un film — ou <strong>colle un lien YouTube</strong>.
+          Film, série, artiste ou <strong>lien YouTube</strong> — puis export 4K.
         </p>
-      )}
 
-      <div className="search-box-min">
-        <input
-          className="search-input-min"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && runSearch()}
-          placeholder="Réplique, film, série… ou lien YouTube"
-          autoFocus={!!initialQuery}
-          enterKeyHint="search"
-        />
-        <button type="button" className="btn-mine" onClick={() => runSearch()}>
-          Chercher
-        </button>
-      </div>
-
-      <div className="type-tabs">
-        {([
-          ["all", "Tout"],
-          ["film", "Films"],
-          ["series", "Séries"],
-        ] as const).map(([id, label]) => (
-          <button
-            key={id}
-            type="button"
-            className={`type-tab ${typeFilter === id ? "on" : ""}`}
-            onClick={() => setFilter(id)}
-          >
-            {label}
+        <div className="search-box-min">
+          <input
+            className="search-input-min"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && runSearch()}
+            placeholder="Inception, Madison Beer, lien YouTube…"
+            autoFocus={!!initialQuery}
+            enterKeyHint="search"
+          />
+          <button type="button" className="btn-mine" onClick={() => runSearch()}>
+            Chercher
           </button>
-        ))}
-      </div>
+        </div>
 
-      <div className="type-tabs">
-        <button type="button" className={`type-tab ${sort === "scene" ? "on" : ""}`} onClick={() => setSortMode("scene")}>
-          Par scène
-        </button>
-        <button type="button" className={`type-tab ${sort === "popular" ? "on" : ""}`} onClick={() => setSortMode("popular")}>
-          Popularité
-        </button>
-      </div>
+        <div className="search-toolbar">
+          <div className="type-tabs type-tabs-inline">
+            {([
+              ["all", "Tout"],
+              ["film", "Films"],
+              ["series", "Séries"],
+            ] as const).map(([id, label]) => (
+              <button
+                key={id}
+                type="button"
+                className={`type-tab ${typeFilter === id ? "on" : ""}`}
+                onClick={() => setFilter(id)}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+          <div className="search-sort">
+            <button
+              type="button"
+              className={`sort-pill ${sort === "scene" ? "on" : ""}`}
+              onClick={() => setSortMode("scene")}
+            >
+              Par scène
+            </button>
+            <button
+              type="button"
+              className={`sort-pill ${sort === "popular" ? "on" : ""}`}
+              onClick={() => setSortMode("popular")}
+            >
+              Popularité
+            </button>
+          </div>
+        </div>
 
-      {!compact && (
         <div className="chips-min">
-          {CHIPS.map(([label, q]) => (
+          {CHIPS.slice(0, showMoreChips ? CHIPS.length : 3).map(([label, q]) => (
             <button key={q} type="button" className="chip-min" onClick={() => runSearch(q)}>
               {label}
             </button>
           ))}
-        </div>
-      )}
-
-      <div className="ratio-tabs">
-        {["9:16", "16:9", "4:3"].map((r) => (
           <button
-            key={r}
             type="button"
-            className={`ratio-tab ${ratio === r ? "on" : ""}`}
-            onClick={() => setRatio(r)}
+            className="chip-min chip-more"
+            onClick={() => setShowMoreChips(!showMoreChips)}
           >
-            {r}
+            {showMoreChips ? "Moins" : "+ Suggestions"}
           </button>
-        ))}
+        </div>
+
+        {demoMode && (
+          <p className="demo-hint">Mode démo — certains titres nécessitent la clé YouTube live.</p>
+        )}
+
+        {error && !loading && <p className="search-err">{error}</p>}
       </div>
 
-      {demoMode && (
-        <p className="demo-hint">Mode démo · configure <code>YOUTUBE_API_KEY</code> pour les clips 4K live + transcriptions auto.</p>
-      )}
-
-      {error && !loading && <p className="search-err">{error}</p>}
-
-      {(loading || (results && results.length > 0)) && (
-        <div className="clips-list">
-          {loading
-            ? Array.from({ length: 6 }).map((_, i) => (
-                <div key={i} className="clip-skeleton" />
-              ))
-            : results!.map((r) => (
-                <ClipCard key={`${r.youtubeId}-${r.scene ?? r.title}`} clip={r} ratio={ratio} onSelect={() => onSelect(r)} />
-              ))}
-        </div>
-      )}
+      <div className="search-panel-results">
+        {(loading || (results && results.length > 0)) && (
+          <div className="clips-list">
+            {loading
+              ? Array.from({ length: 6 }).map((_, i) => (
+                  <div key={i} className="clip-skeleton" />
+                ))
+              : results!.map((r) => (
+                  <ClipCard
+                    key={`${r.youtubeId}-${r.scene ?? r.title}`}
+                    clip={r}
+                    onSelect={() => onSelect(r)}
+                  />
+                ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
 
-export function saveExportLocal(job: { id: string; title: string; ratio: string; status: string; date: string }) {
+export function saveExportLocal(job: {
+  id: string;
+  title: string;
+  ratio: string;
+  status: string;
+  date: string;
+  fileUrl?: string;
+}) {
   try {
     const prev = JSON.parse(localStorage.getItem("clipmine_exports") ?? "[]");
     localStorage.setItem("clipmine_exports", JSON.stringify([job, ...prev].slice(0, 50)));

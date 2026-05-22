@@ -1,6 +1,7 @@
 "use client";
 
-import PrimeLink from "./PrimeLink";
+import PrimeBuyButton from "./PrimeBuyButton";
+import { cleanTranscript, hasBuyMovieCta } from "@/lib/clip-text";
 import type { ClipResult } from "./SearchPanel";
 
 function formatViews(n: number) {
@@ -11,18 +12,18 @@ function formatViews(n: number) {
 
 export default function ClipCard({
   clip,
-  ratio,
   onSelect,
 }: {
   clip: ClipResult;
-  ratio: string;
+  ratio?: string;
   onSelect: () => void;
 }) {
-  const transcript = clip.transcript ?? clip.quote;
+  const raw = clip.transcript ?? clip.quote ?? "";
+  const transcript = cleanTranscript(raw);
+  const showPrime = hasBuyMovieCta(raw) || /movieclips|warner|universal/i.test(clip.channel);
 
   return (
     <article className="clip-card">
-      <PrimeLink compact />
       <button type="button" className="clip-card-main" onClick={onSelect}>
         <div
           className="clip-card-thumb"
@@ -30,7 +31,6 @@ export default function ClipCard({
         >
           {clip.is4K && <span className="clip-4k">4K</span>}
           <span className="clip-type">{clip.type === "series" ? "Série" : "Film"}</span>
-          <span className="clip-ratio">{ratio}</span>
         </div>
         <div className="clip-card-body">
           <h3 className="clip-movie">{clip.movie ?? clip.title}</h3>
@@ -40,6 +40,9 @@ export default function ClipCard({
               <span className="clip-transcript-label">Transcription</span>
               &ldquo;{transcript}&rdquo;
             </p>
+          )}
+          {showPrime && (
+            <PrimeBuyButton onClick={(e) => e.stopPropagation()} />
           )}
           <p className="clip-meta">
             {formatViews(clip.views) && `${formatViews(clip.views)} vues · `}
