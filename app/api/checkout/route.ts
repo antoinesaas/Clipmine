@@ -47,8 +47,14 @@ export async function POST(req: NextRequest) {
       customer: user.stripeCustomerId!,
       mode: isCredits ? "payment" : "subscription",
       line_items: [{ price: priceId, quantity: 1 }],
-      success_url: `${base}/app?success=1`,
-      cancel_url: `${base}/app?canceled=1`,
+      success_url: isCredits
+        ? `${base}/app/exports?credits_purchased=1`
+        : plan === "CREATOR" || plan === "PRO"
+          ? `${base}/app/billing?subscribed=1`
+          : `${base}/app/exports?success=1`,
+      cancel_url: isCredits
+        ? `${base}/app/billing?canceled=1`
+        : `${base}/app/billing?canceled=1`,
       metadata: { userId: user.id, plan },
     });
 

@@ -28,11 +28,13 @@ export default function AppLayoutClient({ children }: { children: React.ReactNod
   const { me } = useMe();
 
   const quotaLabel = me
-    ? me.freeExportAvailable
-      ? "1 export 4K offert"
-      : me.monthlyQuota === null
-        ? "Exports illimités"
-        : `${me.exportsThisMonth}/${me.monthlyQuota} ce mois`
+    ? me.bonusCredits > 0
+      ? `${me.bonusCredits} export${me.bonusCredits > 1 ? "s" : ""} bonus`
+      : me.freeExportAvailable
+        ? "1 export 4K offert"
+        : me.monthlyQuota === null
+          ? "Exports illimités"
+          : `${me.exportsThisMonth}/${me.monthlyQuota} ce mois`
     : "";
 
   return (

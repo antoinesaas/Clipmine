@@ -1444,6 +1444,33 @@ footer {
   font-size: 11px; color: var(--warn); margin-top: 6px; line-height: 1.4;
 }
 .export-row > div:first-child { flex: 1; min-width: 0; }
+.export-row-actions { display: flex; gap: 8px; flex-shrink: 0; align-items: center; }
+.export-row-stage { font-size: 11px; color: var(--accent-2); margin-top: 6px; }
+.btn-mine-ghost {
+  background: transparent !important;
+  border: 1px solid var(--line) !important;
+  color: var(--mut) !important;
+}
+.exports-credits-banner {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 14px 16px;
+  margin-bottom: 16px;
+  border-radius: 14px;
+  background: rgba(0, 102, 255, 0.1);
+  border: 1px solid rgba(0, 102, 255, 0.35);
+}
+.exports-credits-banner strong { font-size: 15px; color: var(--accent-2); }
+.exports-credits-banner span { font-size: 12px; color: var(--mut); }
+.exports-retention-hint {
+  margin-top: 20px;
+  font-size: 12px;
+  color: var(--dim);
+  text-align: center;
+  line-height: 1.45;
+}
+.app-page-exports { max-width: 560px; }
 .empty-state {
   text-align: center; padding: 40px 20px;
   background: var(--surface); border: 1px dashed var(--line-2);

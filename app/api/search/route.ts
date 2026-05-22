@@ -5,6 +5,8 @@ import {
   inferMediaType,
   isUsableClip,
   isArtistQuery,
+  isFilmTitleQuery,
+  filmSearchQueries,
   extractMovieTitle,
   parseDurationSeconds,
 } from "@/lib/film-filter";
@@ -205,7 +207,12 @@ async function fetchVideo(id: string, key: string) {
 async function searchLiveOnce(
   searchQ: string,
   key: string,
-  opts: { artist: boolean; typeFilter?: MediaType | "all" | null },
+  opts: {
+    artist: boolean;
+    filmSearch?: boolean;
+    typeFilter?: MediaType | "all" | null;
+    videoDuration?: "medium" | "long";
+  },
 ) {
   const searchUrl = new URL("https://www.googleapis.com/youtube/v3/search");
   searchUrl.searchParams.set("part", "snippet");
@@ -214,6 +221,9 @@ async function searchLiveOnce(
   searchUrl.searchParams.set("maxResults", "40");
   searchUrl.searchParams.set("videoDefinition", "high");
   if (!opts.artist) searchUrl.searchParams.set("videoCategoryId", "1");
+  if (opts.filmSearch && opts.videoDuration) {
+    searchUrl.searchParams.set("videoDuration", opts.videoDuration);
+  }
   searchUrl.searchParams.set("order", "relevance");
   searchUrl.searchParams.set("key", key);
   const sr = await fetch(searchUrl).then((r) => r.json());
@@ -237,34 +247,52 @@ async function searchLiveOnce(
 
   return mapped
     .filter((row: { r: Mapped; durationSec: number | null }) =>
-      isUsableClip(row.r.title, row.r.channel, row.durationSec, { allowArtist: opts.artist }),
+      isUsableClip(row.r.title, row.r.channel, row.durationSec, {
+        allowArtist: opts.artist,
+        filmSearch: opts.filmSearch,
+      }),
     )
     .map((row: { r: Mapped }) => row.r);
 }
 
 async function searchLive(q: string, key: string, typeFilter?: MediaType | "all" | null) {
   const artist = isArtistQuery(q);
+  const filmSearch = isFilmTitleQuery(q);
   const queries = artist
     ? [
         augmentSearchQuery(q),
         `${q.trim()} official music video`,
         `${q.trim()} vevo 4k`,
       ]
-    : [augmentSearchQuery(q)];
+    : filmSearch
+      ? filmSearchQueries(q)
+      : [`${q.trim()} movie scene 4k`];
 
   const seen = new Set<string>();
   const merged: SearchResult[] = [];
 
+  const durations: Array<"medium" | "long" | undefined> = filmSearch
+    ? ["medium", "long"]
+    : [undefined];
+
   for (const searchQ of queries) {
-    const batch = await searchLiveOnce(searchQ, key, { artist, typeFilter });
-    if (!batch) continue;
-    for (const r of batch) {
-      if (seen.has(r.youtubeId)) continue;
-      seen.add(r.youtubeId);
-      merged.push(r);
-      if (merged.length >= 16) break;
+    for (const dur of durations) {
+      const batch = await searchLiveOnce(searchQ, key, {
+        artist,
+        filmSearch,
+        typeFilter,
+        videoDuration: dur,
+      });
+      if (!batch) continue;
+      for (const r of batch) {
+        if (seen.has(r.youtubeId)) continue;
+        seen.add(r.youtubeId);
+        merged.push(r);
+        if (merged.length >= 16) break;
+      }
+      if (merged.length >= 12) break;
     }
-    if (merged.length >= 8) break;
+    if (merged.length >= 12) break;
   }
 
   const results: SearchResult[] = await Promise.all(

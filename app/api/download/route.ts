@@ -5,6 +5,7 @@ import { checkExportEntitlement, consumeExport } from "@/lib/entitlements";
 import { hasWorker, WORKER_SECRET, WORKER_URL } from "@/lib/constants";
 import { sanitizeTools, type AiToolId } from "@/lib/video-tools";
 import { normalizeExportQuality } from "@/lib/export-quality";
+import { pruneUserExports } from "@/lib/user-exports";
 
 async function dispatchToWorker(payload: {
   jobId: string;
@@ -97,6 +98,7 @@ export async function POST(req: NextRequest) {
     });
 
     await consumeExport(user.id, ent.source);
+    await pruneUserExports(user.id);
 
     let dispatchError: string | undefined;
     if (hasWorker()) {
