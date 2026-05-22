@@ -6,7 +6,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { TRENDING_FILMS, thumbForId, clipsForHero, buildHeroBgRows, DEMO_CLIPS } from "@/lib/demo-clips";
 import AuthSearchButton from "@/components/AuthSearchButton";
-import CheckoutButton from "@/components/CheckoutButton";
+import PricingPlans from "@/components/PricingPlans";
 import FeatureShowcase from "@/components/FeatureShowcase";
 import { SUPPORT_EMAIL } from "@/lib/constants";
 
@@ -30,7 +30,7 @@ const MODELS = [
 const USECASES = [
   { title: "Éditeurs TikTok / Reels", desc: "Sourcing rapide de matière première viral-ready, recadrée en 9:16." },
   { title: "Créateurs YouTube", desc: "Upscale tes archives, remasterise tes anciennes vidéos en 4K." },
-  { title: "Agences & Studios", desc: "Workflow B-roll industriel, batch processing, accès API." },
+  { title: "Agences & Studios", desc: "Volume d'exports, slow-motion Chronos, support prioritaire." },
   { title: "Archivistes & Passionnés", desc: "Restaure des films de famille, des VHS, des archives historiques." },
 ];
 
@@ -310,58 +310,10 @@ export default function Landing() {
           <div className="eyebrow">Tarifs</div>
           <h2 className="h2">Gratuit pour démarrer.<br />Scalable quand tu veux.</h2>
           <p className="sec-sub">
-            Premier export 4K offert. Pas de carte. Choisis ton plan ensuite.
+            <span className="promo-pill">Promo lancement −40%</span> Premier export 4K offert. Pas de carte.
           </p>
 
-          <div className="price-grid">
-            <div className="plan">
-              <h3>Free</h3>
-              <p className="pdesc">Pour tester la magie</p>
-              <div className="price">0€</div>
-              <ul>
-                <li>{Check()}Recherches illimitées</li>
-                <li>{Check()}<b>1 export 4K offert</b></li>
-                <li>{Check()}Autocrop basique 9:16 / 16:9</li>
-                <li className="off">{Check()}Enhance IA</li>
-              </ul>
-              <button type="button" className="btn btn-ghost" onClick={() => openSignIn({ forceRedirectUrl: "/app/search" })}>
-                Commencer
-              </button>
-            </div>
-
-            <div className="plan feat-plan">
-              <div className="pop">Le plus populaire</div>
-              <h3>Creator</h3>
-              <p className="pdesc">Pour les éditeurs actifs</p>
-              <div className="price">9€<small>/mois</small></div>
-              <ul>
-                <li>{Check()}Tout du plan Free</li>
-                <li>{Check()}<b>50 exports 4K / mois</b></li>
-                <li>{Check()}Enhance IA + 60fps</li>
-                <li>{Check()}Tous les modèles AI</li>
-                <li>{Check()}Hook Finder</li>
-              </ul>
-              <CheckoutButton plan="CREATOR" className="btn btn-primary">
-                Passer Creator
-              </CheckoutButton>
-            </div>
-
-            <div className="plan">
-              <h3>Pro</h3>
-              <p className="pdesc">Pour les agences & studios</p>
-              <div className="price">24€<small>/mois</small></div>
-              <ul>
-                <li>{Check()}Tout du plan Creator</li>
-                <li>{Check()}<b>Exports illimités</b></li>
-                <li>{Check()}Trend Radar</li>
-                <li>{Check()}Accès API</li>
-                <li>{Check()}Support prioritaire</li>
-              </ul>
-              <CheckoutButton plan="PRO" className="btn btn-ghost">
-                Passer Pro
-              </CheckoutButton>
-            </div>
-          </div>
+          <PricingPlans />
         </div>
       </section>
 
@@ -419,13 +371,5 @@ export default function Landing() {
         </div>
       </footer>
     </>
-  );
-}
-
-function Check() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
-      <polyline points="20 6 9 17 4 12" />
-    </svg>
   );
 }

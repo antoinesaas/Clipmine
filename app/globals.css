@@ -731,6 +731,30 @@ section { padding: 56px 0; position: relative; }
 .plan li.off { color: var(--dim); text-decoration: line-through; opacity: 0.7; }
 .plan li.off svg { color: var(--dim); }
 .plan li b { color: var(--txt); font-weight: 600; }
+.plan .price-was {
+  display: block;
+  font-size: 14px;
+  color: var(--dim);
+  text-decoration: line-through;
+  font-weight: 500;
+  margin-top: 4px;
+}
+.plan .pop.promo-secondary {
+  background: var(--surface-2);
+  color: var(--accent-2);
+  border: 1px solid var(--line-2);
+}
+.promo-pill {
+  display: inline-block;
+  background: rgba(0, 102, 255, 0.15);
+  color: var(--accent-2);
+  font-size: 12px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 99px;
+  margin-right: 8px;
+  font-family: var(--mono);
+}
 .plan .btn { width: 100%; padding: 14px; font-size: 15px; justify-content: center; }
 
 /* === CTA === */

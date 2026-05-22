@@ -53,9 +53,9 @@ export default function CGU() {
             <section>
               <h2>4. Plans tarifaires</h2>
               <ul>
-                <li><strong>Free :</strong> 1 export 4K offert, recherches illimitées</li>
-                <li><strong>Creator (9 €/mois) :</strong> 50 exports 4K/mois, enhance IA, Hook Finder</li>
-                <li><strong>Pro (24 €/mois) :</strong> exports illimités, Trend Radar, accès API</li>
+                <li><strong>Free :</strong> 1 export 4K offert, recherches illimitées, recadrage 9:16</li>
+                <li><strong>Creator (5,49 €/mois, promo −40%) :</strong> 50 exports 4K/mois, upscale, enhance, denoise, stabilisation, 60fps</li>
+                <li><strong>Pro (14,99 €/mois, promo −40%) :</strong> exports illimités, tous les modèles IA dont slow-motion Chronos</li>
               </ul>
               <p>Paiements traités par <strong>Stripe</strong>. Prélèvement mensuel automatique. Tarifs TTC.</p>
             </section>

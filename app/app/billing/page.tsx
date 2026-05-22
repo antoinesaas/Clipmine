@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import { PRICING, formatPrice } from "@/lib/plans";
 
 type Plan = "CREATOR" | "PRO" | "CREDITS_10";
 
@@ -62,7 +63,7 @@ export default function BillingPage() {
         <div className="plan-min">
           <div>
             <strong>Creator</strong>
-            <span>50 exports / mois · 9€</span>
+            <span>{PRICING.CREATOR.monthlyExports} exports / mois · {formatPrice(PRICING.CREATOR.priceMonthly)} <s>{formatPrice(PRICING.CREATOR.priceWas)}</s></span>
           </div>
           <button type="button" className="btn-mine" disabled={busy === "CREATOR"} onClick={() => checkout("CREATOR")}>
             {busy === "CREATOR" ? "…" : "Choisir"}
@@ -71,7 +72,7 @@ export default function BillingPage() {
         <div className="plan-min feat">
           <div>
             <strong>Pro</strong>
-            <span>Illimité · 24€</span>
+            <span>Illimité · {formatPrice(PRICING.PRO.priceMonthly)} <s>{formatPrice(PRICING.PRO.priceWas)}</s></span>
           </div>
           <button type="button" className="btn-mine" disabled={busy === "PRO"} onClick={() => checkout("PRO")}>
             {busy === "PRO" ? "…" : "Choisir"}
@@ -80,7 +81,7 @@ export default function BillingPage() {
         <div className="plan-min">
           <div>
             <strong>10 exports</strong>
-            <span>Ponctuel · 1,99€</span>
+            <span>Ponctuel · {formatPrice(PRICING.CREDITS_10.priceOnce)} <s>{formatPrice(PRICING.CREDITS_10.priceWas)}</s></span>
           </div>
           <button type="button" className="btn-mine" disabled={busy === "CREDITS_10"} onClick={() => checkout("CREDITS_10")}>
             {busy === "CREDITS_10" ? "…" : "Acheter"}

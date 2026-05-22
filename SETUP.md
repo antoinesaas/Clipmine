@@ -16,6 +16,24 @@ Guide pour activer toutes les fonctionnalités en production (Vercel + worker Fl
 | `WORKER_URL` / `WORKER_SECRET` | Pipeline ffmpeg sur Fly.io |
 | Clerk + `CRON_SECRET` | ✅ déjà configurés |
 
+### Supabase (projet `elwqdulkxprjmkejwcai`, région eu-west-1)
+
+Voir **`docs/SUPABASE-VERCEL.md`** — URI via bouton **Connect** (Transaction pooler + Direct), pas l’écran « Connection pooling ».
+
+### Google Search Console
+
+Voir **`docs/GOOGLE-SEARCH-CONSOLE.md`** — utiliser **Préfixe d’URL** + balise HTML, pas « Domaine » DNS.
+
+### Tarifs promo (-40%)
+
+| Plan | Promo | Avant |
+|------|-------|-------|
+| Creator | 5,49 €/mois | 9 € |
+| Pro | 14,99 €/mois | 24 € |
+| 10 exports | 1,19 € | 1,99 € |
+
+Recréer les prix Stripe : `node --env-file=.env.local scripts/setup-stripe.mjs`
+
 ### Supabase (projet `elwqdulkxprjmkejwcai`)
 
 Tables Prisma **`User`** + **`Download`** via migration `clipmine_init`.

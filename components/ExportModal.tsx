@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { toast } from "sonner";
+import { PRICING, formatPrice } from "@/lib/plans";
 import type { ClipResult } from "./SearchPanel";
 import { saveExportLocal } from "./SearchPanel";
 import { embedUrl, thumbForId } from "@/lib/demo-clips";
@@ -247,13 +248,13 @@ export function PaywallModal({ onClose }: { onClose: () => void }) {
         Passe Creator ou Pro pour continuer à exporter en 4K.
       </p>
       <button type="button" className="btn btn-primary" style={{ width: "100%", padding: 14, marginBottom: 10, justifyContent: "center" }} onClick={() => checkout("CREATOR")}>
-        Creator — 9€/mois
+        Creator — {formatPrice(PRICING.CREATOR.priceMonthly)}/mois <span style={{ opacity: 0.7, textDecoration: "line-through", marginLeft: 6 }}>{formatPrice(PRICING.CREATOR.priceWas)}</span>
       </button>
       <button type="button" className="btn btn-ghost" style={{ width: "100%", padding: 14, marginBottom: 10, justifyContent: "center" }} onClick={() => checkout("PRO")}>
-        Pro — 24€/mois
+        Pro — {formatPrice(PRICING.PRO.priceMonthly)}/mois <span style={{ opacity: 0.7, textDecoration: "line-through", marginLeft: 6 }}>{formatPrice(PRICING.PRO.priceWas)}</span>
       </button>
       <button type="button" className="btn btn-ghost" style={{ width: "100%", padding: 14, justifyContent: "center" }} onClick={() => checkout("CREDITS_10")}>
-        10 exports — 1,99€
+        10 exports — {formatPrice(PRICING.CREDITS_10.priceOnce)}
       </button>
     </ModalShell>
   );

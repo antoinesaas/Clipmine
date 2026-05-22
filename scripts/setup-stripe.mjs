@@ -44,9 +44,9 @@ async function stripe(path, body = {}) {
 
 async function main() {
   const plans = [
-    { env: "STRIPE_PRICE_CREATOR", name: "ClipMine Creator", amount: 900, interval: "month" },
-    { env: "STRIPE_PRICE_PRO", name: "ClipMine Pro", amount: 2400, interval: "month" },
-    { env: "STRIPE_PRICE_CREDITS_10", name: "ClipMine 10 exports", amount: 199, interval: null },
+    { env: "STRIPE_PRICE_CREATOR", name: "ClipMine Creator (-40%)", amount: 549, interval: "month" },
+    { env: "STRIPE_PRICE_PRO", name: "ClipMine Pro (-40%)", amount: 1499, interval: "month" },
+    { env: "STRIPE_PRICE_CREDITS_10", name: "ClipMine 10 exports (-40%)", amount: 119, interval: null },
   ];
 
   const out = {};
