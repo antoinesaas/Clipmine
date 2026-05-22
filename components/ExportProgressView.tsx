@@ -1,11 +1,13 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import {
-  PIPELINE_STAGES,
+  PIPELINE_UI_STAGES,
+  computeProgressPercent,
+  estimateRemainingSeconds,
   ffmpegStepLabels,
-  progressPercent,
+  formatEta,
   resolveStage,
   type PipelineStageId,
 } from "@/lib/pipeline-progress";
@@ -17,6 +19,7 @@ type JobStatus = {
   pipelineStage?: string | null;
   fileUrl?: string | null;
   errorMessage?: string | null;
+  createdAt?: string | null;
 };
 
 export default function ExportProgressView({
@@ -33,7 +36,9 @@ export default function ExportProgressView({
   tools: AiToolId[];
 }) {
   const [data, setData] = useState<JobStatus | null>(null);
-  const [tick, setTick] = useState(0);
+  const [displayPct, setDisplayPct] = useState(0);
+  const startedAtRef = useRef<number>(Date.now());
+  const [, setTick] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
@@ -42,14 +47,20 @@ export default function ExportProgressView({
         const r = await fetch(`/api/download/${jobId}/status`);
         if (!r.ok) return;
         const json = await r.json();
-        if (!cancelled) setData(json);
+        if (!cancelled) {
+          setData(json);
+          if (json.createdAt) {
+            const t = new Date(json.createdAt).getTime();
+            if (!Number.isNaN(t)) startedAtRef.current = t;
+          }
+        }
       } catch {
         /* retry */
       }
     }
     poll();
     const id = setInterval(poll, 2000);
-    const anim = setInterval(() => setTick((t) => t + 1), 400);
+    const anim = setInterval(() => setTick((t) => t + 1), 500);
     return () => {
       cancelled = true;
       clearInterval(id);
@@ -60,16 +71,20 @@ export default function ExportProgressView({
   const stage = resolveStage(data?.status ?? "processing", data?.pipelineStage);
   const failed = stage === "failed" || data?.status === "failed";
   const ready = stage === "ready" || data?.status === "ready";
+  const activeTools = tools.filter((t) => t !== "stabilize");
 
-  const subProgress = useMemo(() => {
-    if (ready) return 1;
-    if (stage === "ffmpeg") return 0.35 + (tick % 8) * 0.08;
-    if (stage === "download") return 0.2 + (tick % 6) * 0.1;
-    if (stage === "upload") return 0.5 + (tick % 4) * 0.12;
-    return (tick % 5) * 0.15;
-  }, [stage, ready, tick]);
+  useEffect(() => {
+    if (ready) {
+      setDisplayPct(100);
+      return;
+    }
+    const elapsed = Date.now() - startedAtRef.current;
+    const next = computeProgressPercent(stage, elapsed, activeTools.length);
+    setDisplayPct((prev) => Math.max(prev, next));
+  }, [stage, ready, activeTools.length, data?.pipelineStage, data?.status]);
 
-  const pct = progressPercent(stage, subProgress);
+  const elapsed = Date.now() - startedAtRef.current;
+  const etaSec = ready ? 0 : estimateRemainingSeconds(stage, elapsed, activeTools.length);
   const ffmpegSteps = ffmpegStepLabels(tools);
 
   return (
@@ -82,7 +97,8 @@ export default function ExportProgressView({
             <p className="export-progress-title">{title}</p>
             <p className="export-progress-meta">
               {ratio} · {quality}
-              {tools.length > 0 && ` · ${tools.length} modèle${tools.length > 1 ? "s" : ""} IA`}
+              {activeTools.length > 0 &&
+                ` · ${activeTools.length} modèle${activeTools.length > 1 ? "s" : ""} IA`}
             </p>
           </div>
         </div>
@@ -90,20 +106,25 @@ export default function ExportProgressView({
         <div className="export-progress-bar-wrap">
           <div
             className="export-progress-bar-fill"
-            style={{ width: `${pct}%` }}
+            style={{ width: `${displayPct}%` }}
             role="progressbar"
-            aria-valuenow={pct}
+            aria-valuenow={displayPct}
             aria-valuemin={0}
             aria-valuemax={100}
           />
         </div>
-        <p className="export-progress-pct">{pct}%</p>
+        <div className="export-progress-stats">
+          <span className="export-progress-pct">{displayPct}%</span>
+          {!ready && !failed && (
+            <span className="export-progress-eta">Temps restant {formatEta(etaSec)}</span>
+          )}
+        </div>
 
         <ol className="export-progress-steps">
-          {PIPELINE_STAGES.filter((s) => s.id !== "failed").map((step) => {
-            const stepId = step.id as PipelineStageId;
-            const idx = PIPELINE_STAGES.findIndex((x) => x.id === stepId);
-            const currentIdx = PIPELINE_STAGES.findIndex((x) => x.id === stage);
+          {PIPELINE_UI_STAGES.map((step) => {
+            const stepId = step.id;
+            const idx = PIPELINE_UI_STAGES.findIndex((x) => x.id === stepId);
+            const currentIdx = PIPELINE_UI_STAGES.findIndex((x) => x.id === stage);
             const done = currentIdx > idx || ready;
             const active = stepId === stage && !ready && !failed;
 
@@ -129,9 +150,9 @@ export default function ExportProgressView({
           })}
         </ol>
 
-        {tools.length > 0 && (
+        {activeTools.length > 0 && (
           <div className="export-progress-tools">
-            {tools.map((id) => (
+            {activeTools.map((id) => (
               <span key={id} className="export-progress-tool-chip">
                 {AI_TOOL_LABELS[id].model}
               </span>

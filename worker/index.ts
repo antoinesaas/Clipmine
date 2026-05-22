@@ -10,7 +10,12 @@ import path from "path";
 import { PrismaClient } from "@prisma/client";
 import { S3Client, PutObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
-import { buildFfmpegArgs, normalizeTools } from "./pipeline.js";
+import {
+  buildFfmpegArgs,
+  buildFallbackFilterChains,
+  normalizeTools,
+  type PipelineInput,
+} from "./pipeline.js";
 import { downloadYoutubeMp4 } from "./ytdlp.js";
 
 const exec = promisify(execFile);
@@ -83,31 +88,45 @@ function auth(req: express.Request, res: express.Response, next: express.NextFun
   next();
 }
 
-async function runFfmpeg(args: string[], timeout = 900_000) {
-  try {
-    await exec("ffmpeg", args, { timeout, maxBuffer: 20 * 1024 * 1024 });
-  } catch (e: unknown) {
-    const err = e as { stderr?: string; message?: string };
-    const msg = err.stderr ?? err.message ?? "ffmpeg failed";
-    if (msg.includes("deshake") || msg.includes("minterpolate")) {
-      console.warn("[worker] fallback filters", msg.slice(0, 200));
-      const vf = args[args.indexOf("-vf") + 1] ?? "";
-      const fallback = vf
-        .replace(/deshake=[^,]+,?/g, "")
-        .replace(/minterpolate=[^,]+/g, "fps=60")
-        .replace(/,,/g, ",")
-        .replace(/^,|,$/g, "");
-      const args2 = [...args];
-      args2[args2.indexOf("-vf") + 1] = fallback || "scale=1920:1080";
-      await exec("ffmpeg", args2, { timeout, maxBuffer: 20 * 1024 * 1024 });
+function replaceVf(args: string[], vf: string): string[] {
+  const out = [...args];
+  const i = out.indexOf("-vf");
+  if (i >= 0) out[i + 1] = vf;
+  return out;
+}
+
+async function runFfmpegOnce(args: string[], timeout = 900_000) {
+  await exec("ffmpeg", args, { timeout, maxBuffer: 24 * 1024 * 1024 });
+}
+
+async function runFfmpegWithFallbacks(
+  inputPath: string,
+  outputPath: string,
+  pipeline: PipelineInput,
+  maxSec?: number,
+) {
+  const primary = buildFfmpegArgs(inputPath, outputPath, pipeline, maxSec);
+  const chains = buildFallbackFilterChains(pipeline);
+  const attempts = [primary, ...chains.map((vf) => replaceVf(primary, vf))];
+
+  let lastErr: unknown;
+  for (let i = 0; i < attempts.length; i++) {
+    try {
+      console.log("[worker] ffmpeg attempt", i + 1, attempts[i][attempts[i].indexOf("-vf") + 1]?.slice(0, 120));
+      await runFfmpegOnce(attempts[i]);
+      if (i > 0) console.log("[worker] ffmpeg ok on fallback", i + 1);
       return;
+    } catch (e) {
+      lastErr = e;
+      const err = e as { stderr?: string; message?: string };
+      console.warn("[worker] ffmpeg fail", i + 1, (err.stderr ?? err.message ?? "").slice(0, 300));
     }
-    throw e;
   }
+  throw lastErr;
 }
 
 app.get("/health", (_req, res) => {
-  res.json({ ok: true, service: "clipmine-worker", r2: hasR2, db: Boolean(prisma), pipeline: "ffmpeg-ai-v2" });
+  res.json({ ok: true, service: "clipmine-worker", r2: hasR2, db: Boolean(prisma), pipeline: "ffmpeg-ai-v3" });
 });
 
 app.post("/process", auth, async (req, res) => {
@@ -121,6 +140,8 @@ app.post("/process", auth, async (req, res) => {
   res.json({ status: "accepted", jobId, tools });
 
   const workDir = path.join(TMP, jobId);
+  const pipeline: PipelineInput = { ratio, quality, tools };
+
   void (async () => {
     try {
       await mkdir(workDir, { recursive: true });
@@ -133,10 +154,8 @@ app.post("/process", auth, async (req, res) => {
       await downloadYoutubeMp4(youtubeId, rawMp4);
 
       await setStatus(jobId, "processing", { pipelineStage: "ffmpeg" });
-      const ffArgs = buildFfmpegArgs(rawMp4, out, { ratio, quality, tools }, MAX_CLIP_SEC);
-      await runFfmpeg(ffArgs);
+      await runFfmpegWithFallbacks(rawMp4, out, pipeline, MAX_CLIP_SEC);
 
-      await setStatus(jobId, "processing", { pipelineStage: "upload" });
       let fileUrl: string | undefined;
       if (hasR2) {
         fileUrl = await uploadToR2(out, `exports/${jobId}.mp4`);
@@ -147,12 +166,15 @@ app.post("/process", auth, async (req, res) => {
       await setStatus(jobId, "ready", { fileUrl, pipelineStage: "ready" });
       console.log("[worker] done", jobId, tools.join("+"), fileUrl);
     } catch (e) {
-      const msg = e instanceof Error ? e.message : String(e);
+      const err = e as { stderr?: string; message?: string };
+      const raw = err.stderr ?? err.message ?? String(e);
       const short =
-        msg.includes("bot") || msg.includes("Sign in")
+        raw.includes("bot") || raw.includes("Sign in")
           ? "YouTube a bloqué le téléchargement (anti-bot). Réessaie avec un autre clip."
-          : msg.slice(0, 240);
-      console.error("[worker] fail", jobId, msg);
+          : raw.includes("ffmpeg")
+            ? "Pipeline vidéo échoué. Réessaie avec moins d'outils IA ou un autre format."
+            : raw.slice(0, 240);
+      console.error("[worker] fail", jobId, raw.slice(0, 500));
       await setStatus(jobId, "failed", { errorMessage: short });
     } finally {
       await rm(workDir, { recursive: true, force: true }).catch(() => {});
@@ -160,4 +182,4 @@ app.post("/process", auth, async (req, res) => {
   })();
 });
 
-app.listen(PORT, "0.0.0.0", () => console.log(`ClipMine worker :${PORT} (pipeline ffmpeg-ai-v2)`));
+app.listen(PORT, "0.0.0.0", () => console.log(`ClipMine worker :${PORT} (pipeline ffmpeg-ai-v3)`));

@@ -15,7 +15,11 @@ export const AI_TOOL_LABELS: Record<AiToolId, { name: string; model: string; des
   upscale: { name: "Upscale 4K", model: "Starlight", desc: "Montée en 4K (Lanczos + netteté)" },
   enhance: { name: "Enhance", model: "Proteus", desc: "Contraste, saturation, micro-détails" },
   denoise: { name: "Denoise", model: "Nyx", desc: "Réduction du bruit numérique" },
-  stabilize: { name: "Stabilisation", model: "Themis", desc: "Correction des tremblements" },
+  stabilize: {
+    name: "Stabilisation",
+    model: "Themis",
+    desc: "Bientôt — utilise Denoise + Enhance en attendant",
+  },
   fps: { name: "60 fps", model: "Aion", desc: "Fluidification du mouvement" },
   slowmo: { name: "Slow-motion", model: "Chronos", desc: "Ralenti cinéma (Pro)" },
 };
@@ -25,8 +29,8 @@ export type PlanTier = "FREE" | "CREATOR" | "PRO";
 /** Outils autorisés selon le plan (enhance = pipeline IA activé). */
 export function allowedToolsForPlan(plan: PlanTier, enhance: boolean): AiToolId[] {
   if (!enhance) return [];
-  if (plan === "PRO") return [...AI_TOOL_IDS];
-  if (plan === "CREATOR") return ["upscale", "enhance", "denoise", "stabilize", "fps"];
+  if (plan === "PRO") return ["upscale", "enhance", "denoise", "fps", "slowmo"];
+  if (plan === "CREATOR") return ["upscale", "enhance", "denoise", "fps"];
   // 1er export free : upscale + enhance + denoise
   return ["upscale", "enhance", "denoise"];
 }

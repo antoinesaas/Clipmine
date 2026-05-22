@@ -18,6 +18,7 @@ export async function GET(_req: NextRequest, { params }: { params: { id: string 
       quality: dl.quality,
       ratio: dl.ratio,
       enhanced: dl.enhanced,
+      createdAt: dl.createdAt.toISOString(),
     });
   } catch {
     return NextResponse.json({ status: "queued", waitlist: true });
