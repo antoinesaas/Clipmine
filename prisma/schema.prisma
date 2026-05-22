@@ -46,5 +46,6 @@ model Download {
   fileUrl       String?  // lien R2
   errorMessage  String?  // raison si failed
   status        String   @default("processing") // processing | ready | failed
+  pipelineStage String?  // queued | download | ffmpeg | upload
   createdAt   DateTime @default(now())
 }

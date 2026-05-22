@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { PRICING, formatPrice } from "@/lib/plans";
 import type { ClipResult } from "./SearchPanel";
@@ -124,6 +125,7 @@ export function ExportModal({
   onPaywall: () => void;
   onDone: () => void;
 }) {
+  const router = useRouter();
   const plan = planProp;
   const [ratio, setRatio] = useState("9:16");
   const [quality, setQuality] = useState<ExportQuality>("4K");
@@ -171,16 +173,25 @@ export function ExportModal({
         toast.error(data.message ?? "Erreur export");
         return;
       }
+      const jobId = data.jobId ?? String(Date.now());
+      const toolList = enhance ? tools : [];
       saveExportLocal({
-        id: data.jobId ?? String(Date.now()),
+        id: jobId,
         title: clip.title,
         ratio,
-        status: data.status ?? "queued",
+        quality,
+        status: data.status ?? "processing",
         date: new Date().toISOString(),
       });
-      toast.success(data.message ?? "Export lancé !");
       onDone();
       onClose();
+      const qs = new URLSearchParams({
+        title: clip.movie ?? clip.title,
+        quality,
+        ratio,
+        tools: toolList.join(","),
+      });
+      router.push(`/app/export/${jobId}?${qs.toString()}`);
     } catch {
       toast.error("Erreur réseau");
     } finally {

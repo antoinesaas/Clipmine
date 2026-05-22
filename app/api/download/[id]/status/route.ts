@@ -12,8 +12,12 @@ export async function GET(_req: NextRequest, { params }: { params: { id: string 
     if (!dl) return NextResponse.json({ error: "not_found" }, { status: 404 });
     return NextResponse.json({
       status: dl.status,
+      pipelineStage: dl.pipelineStage ?? null,
       fileUrl: dl.fileUrl,
       errorMessage: dl.errorMessage ?? null,
+      quality: dl.quality,
+      ratio: dl.ratio,
+      enhanced: dl.enhanced,
     });
   } catch {
     return NextResponse.json({ status: "queued", waitlist: true });

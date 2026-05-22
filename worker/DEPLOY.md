@@ -48,6 +48,30 @@ Sans R2, les exports restent en file d’attente (statut `processing` en DB).
 
 Option : `MAX_CLIP_SEC=180` (limite durée, évite timeout Fly).
 
+## Anti-bot YouTube (recommandé)
+
+YouTube bloque souvent les IP datacenter. Le worker essaie plusieurs clients (`android`, `tv`, `ios`…). Pour débloquer les téléchargements :
+
+1. Exporte tes cookies YouTube en fichier Netscape (`cookies.txt`) depuis un navigateur connecté.
+2. Encode en base64 : `certutil -encode cookies.txt cookies.b64` (Windows) puis copie le contenu.
+3. Sur Fly :
+
+```bash
+fly secrets set YT_COOKIES_BASE64="<contenu_base64>"
+```
+
+Ou `YT_COOKIES_PATH=/chemin/cookies.txt` si monté en volume.
+
+Puis `fly deploy`.
+
+## Colonne pipeline
+
+Après mise à jour du schéma Prisma :
+
+```bash
+npx prisma db push
+```
+
 ```bash
 cd worker && fly deploy
 ```

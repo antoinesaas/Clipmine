@@ -197,6 +197,7 @@ export function saveExportLocal(job: {
   id: string;
   title: string;
   ratio: string;
+  quality?: string;
   status: string;
   date: string;
   fileUrl?: string;

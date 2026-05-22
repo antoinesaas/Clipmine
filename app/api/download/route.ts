@@ -92,6 +92,7 @@ export async function POST(req: NextRequest) {
         quality: exportQuality,
         enhanced: wantsEnhance && tools.length > 0,
         status: hasWorker() ? "processing" : "queued",
+        pipelineStage: hasWorker() ? "download" : "queued",
       },
     });
 

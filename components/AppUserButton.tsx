@@ -1,6 +1,7 @@
 "use client";
 
 import { UserButton, useClerk } from "@clerk/nextjs";
+import { toast } from "sonner";
 
 const clerkDarkMenu = {
   variables: {
@@ -23,20 +24,38 @@ const clerkDarkMenu = {
 } as const;
 
 export default function AppUserButton() {
-  const { openUserProfile, signOut } = useClerk();
+  const { signOut } = useClerk();
+
+  async function openBillingPortal() {
+    try {
+      const r = await fetch("/api/billing-portal", { method: "POST" });
+      const data = await r.json();
+      if (r.status === 503) {
+        toast.info(data.message ?? "Abonnement Stripe bientôt disponible.");
+        return;
+      }
+      if (!r.ok || !data.url) {
+        toast.error(data.message ?? "Impossible d'ouvrir Stripe.");
+        return;
+      }
+      window.location.href = data.url;
+    } catch {
+      toast.error("Erreur réseau.");
+    }
+  }
 
   return (
     <UserButton afterSignOutUrl="/" appearance={clerkDarkMenu}>
       <UserButton.MenuItems>
         <UserButton.Action
-          label="Paramètres du compte"
+          label="Gérer mon abonnement"
           labelIcon={
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <circle cx="12" cy="12" r="3" />
-              <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" />
+              <rect x="2" y="5" width="20" height="14" rx="2" />
+              <path d="M2 10h20" />
             </svg>
           }
-          onClick={() => openUserProfile()}
+          onClick={() => openBillingPortal()}
         />
         <UserButton.Action
           label="Se déconnecter"

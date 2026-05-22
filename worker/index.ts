@@ -47,7 +47,7 @@ const BUCKET = process.env.R2_BUCKET ?? "";
 async function setStatus(
   jobId: string,
   status: string,
-  opts?: { fileUrl?: string; errorMessage?: string },
+  opts?: { fileUrl?: string; errorMessage?: string; pipelineStage?: string },
 ) {
   if (!prisma) return;
   try {
@@ -55,6 +55,7 @@ async function setStatus(
       where: { id: jobId },
       data: {
         status,
+        ...(opts?.pipelineStage ? { pipelineStage: opts.pipelineStage } : {}),
         ...(opts?.fileUrl ? { fileUrl: opts.fileUrl } : {}),
         ...(opts?.errorMessage !== undefined ? { errorMessage: opts.errorMessage } : {}),
       },
@@ -127,12 +128,15 @@ app.post("/process", auth, async (req, res) => {
       const out = path.join(workDir, "export.mp4");
 
       console.log("[worker] start", jobId, { ratio, quality, tools });
+      await setStatus(jobId, "processing", { pipelineStage: "download" });
 
       await downloadYoutubeMp4(youtubeId, rawMp4);
 
+      await setStatus(jobId, "processing", { pipelineStage: "ffmpeg" });
       const ffArgs = buildFfmpegArgs(rawMp4, out, { ratio, quality, tools }, MAX_CLIP_SEC);
       await runFfmpeg(ffArgs);
 
+      await setStatus(jobId, "processing", { pipelineStage: "upload" });
       let fileUrl: string | undefined;
       if (hasR2) {
         fileUrl = await uploadToR2(out, `exports/${jobId}.mp4`);
@@ -140,7 +144,7 @@ app.post("/process", auth, async (req, res) => {
         throw new Error("Stockage R2 non configuré sur le worker.");
       }
 
-      await setStatus(jobId, "ready", { fileUrl });
+      await setStatus(jobId, "ready", { fileUrl, pipelineStage: "ready" });
       console.log("[worker] done", jobId, tools.join("+"), fileUrl);
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
