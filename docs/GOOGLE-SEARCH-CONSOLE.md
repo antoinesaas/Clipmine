@@ -12,10 +12,10 @@ Tu as choisi **Domaine** + **Fournisseur de nom de domaine**. Google cherche un 
 2. **Ajouter une propriété** → **Préfixe d’URL** (pas « Domaine »)
 3. URL exacte : `https://clipmine.fr` (ou `https://www.clipmine.fr` — une seule, celle de ton site principal)
 4. Vérification → **Balise HTML**
-5. Colle le code : `Fumx5QHDih4MJ6PdWDZUSWBGnQ6p1eSyhfm3Ql9dtPI` (déjà dans `app/layout.tsx`)
+5. Colle le code : `ugb2nRHQkqm2ixZX9NxWkh3RHJIuRO5x94vpmmNnJN8` (déjà dans `app/layout.tsx`)
 6. **Vérifier**
 
-Alternative : **Fichier HTML** → `https://clipmine.fr/googleFumx5QHDih4MJ6PdWDZUSWBGnQ6p1eSyhfm3Ql9dtPI.html`
+Alternative : **Fichier HTML** → `https://clipmine.fr/googleugb2nRHQkqm2ixZX9NxWkh3RHJIuRO5x94vpmmNnJN8.html`
 
 ## Après vérification
 

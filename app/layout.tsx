@@ -32,7 +32,7 @@ export const metadata: Metadata = {
     description: "Upscale tes clips YouTube en 4K cinéma. Modèles AI temporally aware.",
   },
   verification: {
-    google: "Fumx5QHDih4MJ6PdWDZUSWBGnQ6p1eSyhfm3Ql9dtPI",
+    google: "ugb2nRHQkqm2ixZX9NxWkh3RHJIuRO5x94vpmmNnJN8",
   },
   alternates: {
     canonical: "https://clipmine.fr",
