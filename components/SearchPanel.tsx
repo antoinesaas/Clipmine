@@ -25,7 +25,6 @@ const CHIPS: [string, string][] = [
   ["Inception", "Inception movie scene 4k"],
   ["Breaking Bad", "Breaking Bad series scene 4k"],
   ["Interstellar", "Interstellar docking scene 4k"],
-  ["Madison Beer", "Madison Beer official 4k"],
 ];
 
 type TypeFilter = "all" | MediaType;
@@ -107,7 +106,7 @@ export default function SearchPanel({
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && runSearch()}
-            placeholder="Inception, Madison Beer, lien YouTube…"
+            placeholder="Inception, Breaking Bad, lien YouTube…"
             autoFocus={!!initialQuery}
             enterKeyHint="search"
           />

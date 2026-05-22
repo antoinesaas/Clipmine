@@ -18,10 +18,22 @@ export type PipelineInput = {
 };
 
 export function targetSize(ratio: string, quality: string): { w: number; h: number } {
-  const uhd = /4k/i.test(quality);
-  if (ratio === "9:16") return uhd ? { w: 2160, h: 3840 } : { w: 1080, h: 1920 };
-  if (ratio === "4:3") return uhd ? { w: 2880, h: 2160 } : { w: 1440, h: 1080 };
-  return uhd ? { w: 3840, h: 2160 } : { w: 1920, h: 1080 };
+  const q = String(quality).toLowerCase();
+  const tier = /4k|2160/.test(q) ? "4k" : /1440/.test(q) ? "1440" : "1080";
+
+  if (ratio === "9:16") {
+    if (tier === "4k") return { w: 2160, h: 3840 };
+    if (tier === "1440") return { w: 1440, h: 2560 };
+    return { w: 1080, h: 1920 };
+  }
+  if (ratio === "4:3") {
+    if (tier === "4k") return { w: 2880, h: 2160 };
+    if (tier === "1440") return { w: 1920, h: 1440 };
+    return { w: 1440, h: 1080 };
+  }
+  if (tier === "4k") return { w: 3840, h: 2160 };
+  if (tier === "1440") return { w: 2560, h: 1440 };
+  return { w: 1920, h: 1080 };
 }
 
 /** Filtres vidéo ffmpeg (une seule chaîne -vf). */

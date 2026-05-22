@@ -14,6 +14,26 @@ export function hasBuyMovieCta(text: string): boolean {
   return BUY_MOVIE_RE.test(text);
 }
 
+const PRIME_CHANNEL_RE =
+  /movieclips|warner|universal|sony pictures|paramount|mgm|lionsgate|official clips|fandango/i;
+
+/** Affiche le bouton Prime (film / studio officiel). */
+export function shouldShowPrimeBuy(clip: {
+  channel?: string;
+  movie?: string;
+  title?: string;
+  transcript?: string;
+  quote?: string;
+  type?: string;
+}): boolean {
+  const raw = clip.transcript ?? clip.quote ?? "";
+  if (hasBuyMovieCta(raw)) return true;
+  if (PRIME_CHANNEL_RE.test(clip.channel ?? "")) return true;
+  if (clip.type === "film" && clip.movie && clip.movie !== "YouTube") return true;
+  if (/\(\d{4}\)/.test(clip.title ?? "") || /\(\d{4}\)/.test(clip.movie ?? "")) return true;
+  return false;
+}
+
 export function primeAffiliateUrl(): string {
   return PRIME_AFFILIATE_URL;
 }

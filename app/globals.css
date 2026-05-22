@@ -1341,24 +1341,46 @@ footer {
   background: var(--surface); border: 1px solid var(--line);
   border-radius: 16px; overflow: hidden;
 }
+.clip-card-prime {
+  padding: 0 12px 10px;
+  border-top: 1px solid var(--line);
+}
+.modal-prime-row {
+  margin: 12px 0 4px;
+}
 .prime-buy-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  margin-top: 8px;
-  padding: 8px 12px;
+  padding: 6px 10px;
   border-radius: 8px;
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 700;
+  line-height: 1.2;
   color: #fff;
   background: linear-gradient(135deg, #00a8e1 0%, #0066ff 100%);
-  border: 1px solid rgba(0, 168, 225, 0.5);
+  border: 1px solid rgba(0, 168, 225, 0.45);
   text-decoration: none;
-  width: fit-content;
+  width: auto;
   max-width: 100%;
+  white-space: nowrap;
 }
+.prime-buy-btn-short { display: none; }
 .prime-buy-btn:active { transform: scale(0.98); }
 .app-top-right .cl-userButtonBox { width: 36px; height: 36px; }
+.cl-userButtonPopoverCard,
+.cl-userButtonPopoverActions {
+  background: #1a1a20 !important;
+  border-color: #2a2a35 !important;
+}
+.cl-userButtonPopoverActionButton,
+.cl-userButtonPopoverActionButtonText,
+.cl-userButtonPopoverActionButtonIcon {
+  color: #f2f4f8 !important;
+}
+.cl-userButtonPopoverActionButton:hover {
+  background: rgba(255, 255, 255, 0.08) !important;
+}
 .clip-card-main {
   display: flex; gap: 12px; width: 100%; text-align: left;
   background: none; border: none; padding: 12px; cursor: pointer; color: inherit;
@@ -1683,6 +1705,9 @@ footer {
   }
   .clip-movie { font-size: 14px; }
   .clip-transcript { font-size: 12px; -webkit-line-clamp: 2; }
+  .prime-buy-btn-long { display: none; }
+  .prime-buy-btn-short { display: inline; }
+  .clip-card-prime { padding: 8px 10px 10px; }
 
   .plan-min {
     flex-direction: column;

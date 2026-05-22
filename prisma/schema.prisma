@@ -41,7 +41,7 @@ model Download {
   youtubeId   String
   title       String
   ratio       String   // "9:16" | "16:9" | "4:3"
-  quality     String   // "4K" | "1080p"
+  quality     String   // "4K" | "1440p" | "1080p"
   enhanced    Boolean  @default(false)
   fileUrl       String?  // lien R2
   errorMessage  String?  // raison si failed

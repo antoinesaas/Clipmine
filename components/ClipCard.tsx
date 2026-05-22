@@ -1,7 +1,7 @@
 "use client";
 
 import PrimeBuyButton from "./PrimeBuyButton";
-import { cleanTranscript, hasBuyMovieCta } from "@/lib/clip-text";
+import { cleanTranscript, shouldShowPrimeBuy } from "@/lib/clip-text";
 import type { ClipResult } from "./SearchPanel";
 
 function formatViews(n: number) {
@@ -20,7 +20,7 @@ export default function ClipCard({
 }) {
   const raw = clip.transcript ?? clip.quote ?? "";
   const transcript = cleanTranscript(raw);
-  const showPrime = hasBuyMovieCta(raw) || /movieclips|warner|universal/i.test(clip.channel);
+  const showPrime = shouldShowPrimeBuy(clip);
 
   return (
     <article className="clip-card">
@@ -41,9 +41,6 @@ export default function ClipCard({
               &ldquo;{transcript}&rdquo;
             </p>
           )}
-          {showPrime && (
-            <PrimeBuyButton onClick={(e) => e.stopPropagation()} />
-          )}
           <p className="clip-meta">
             {formatViews(clip.views) && `${formatViews(clip.views)} vues · `}
             {clip.channel}
@@ -51,6 +48,11 @@ export default function ClipCard({
           </p>
         </div>
       </button>
+      {showPrime && (
+        <div className="clip-card-prime">
+          <PrimeBuyButton />
+        </div>
+      )}
     </article>
   );
 }

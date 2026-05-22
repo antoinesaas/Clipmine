@@ -15,6 +15,9 @@ import {
   type AiToolId,
   type PlanTier,
 } from "@/lib/video-tools";
+import PrimeBuyButton from "@/components/PrimeBuyButton";
+import { shouldShowPrimeBuy } from "@/lib/clip-text";
+import { EXPORT_QUALITIES, type ExportQuality } from "@/lib/export-quality";
 
 function useBodyLock(open: boolean) {
   useEffect(() => {
@@ -123,6 +126,7 @@ export function ExportModal({
 }) {
   const plan = planProp;
   const [ratio, setRatio] = useState("9:16");
+  const [quality, setQuality] = useState<ExportQuality>("4K");
   const [enhance, setEnhance] = useState(true);
   const [busy, setBusy] = useState(false);
   const allowed = allowedToolsForPlan(plan, enhance);
@@ -153,7 +157,7 @@ export function ExportModal({
           youtubeId: clip.youtubeId,
           title: clip.title,
           ratio,
-          quality: "4K",
+          quality,
           enhance,
           tools: enhance ? tools : [],
         }),
@@ -206,6 +210,12 @@ export function ExportModal({
         </div>
       )}
 
+      {shouldShowPrimeBuy(clip) && (
+        <div className="modal-prime-row">
+          <PrimeBuyButton />
+        </div>
+      )}
+
       <div className="field-label">Format export</div>
       <div className="ratio-row">
         {["9:16", "16:9", "4:3"].map((rt) => (
@@ -216,6 +226,20 @@ export function ExportModal({
             onClick={() => setRatio(rt)}
           >
             {rt}
+          </button>
+        ))}
+      </div>
+
+      <div className="field-label">Qualité</div>
+      <div className="ratio-row">
+        {EXPORT_QUALITIES.map((q) => (
+          <button
+            key={q}
+            type="button"
+            className={`ratio-opt ${quality === q ? "on" : ""}`}
+            onClick={() => setQuality(q)}
+          >
+            {q}
           </button>
         ))}
       </div>
@@ -264,7 +288,7 @@ export function ExportModal({
         disabled={busy}
         onClick={exportClip}
       >
-        {busy ? "Traitement..." : waitlist ? "Rejoindre la file" : "Exporter en 4K"}
+        {busy ? "Traitement..." : waitlist ? "Rejoindre la file" : `Exporter en ${quality}`}
       </button>
     </ModalShell>
   );

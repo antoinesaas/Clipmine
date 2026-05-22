@@ -4,6 +4,7 @@ import { prisma, hasDatabase } from "@/lib/prisma";
 import { checkExportEntitlement, consumeExport } from "@/lib/entitlements";
 import { hasWorker, WORKER_SECRET, WORKER_URL } from "@/lib/constants";
 import { sanitizeTools, type AiToolId } from "@/lib/video-tools";
+import { normalizeExportQuality } from "@/lib/export-quality";
 
 async function dispatchToWorker(payload: {
   jobId: string;
@@ -80,6 +81,7 @@ export async function POST(req: NextRequest) {
 
     const wantsEnhance = enhance !== false;
     const tools = sanitizeTools(rawTools, user.plan, wantsEnhance);
+    const exportQuality = normalizeExportQuality(quality);
 
     const dl = await prisma.download.create({
       data: {
@@ -87,7 +89,7 @@ export async function POST(req: NextRequest) {
         youtubeId,
         title: title ?? "Untitled",
         ratio: ratio ?? "9:16",
-        quality: quality ?? "4K",
+        quality: exportQuality,
         enhanced: wantsEnhance && tools.length > 0,
         status: hasWorker() ? "processing" : "queued",
       },
@@ -102,7 +104,7 @@ export async function POST(req: NextRequest) {
         youtubeId,
         title: title ?? "Untitled",
         ratio: ratio ?? "9:16",
-        quality: quality ?? "4K",
+        quality: exportQuality,
         enhance: wantsEnhance,
         tools,
       });

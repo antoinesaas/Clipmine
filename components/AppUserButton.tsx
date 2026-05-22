@@ -2,19 +2,31 @@
 
 import { UserButton, useClerk } from "@clerk/nextjs";
 
+const clerkDarkMenu = {
+  variables: {
+    colorText: "#f2f4f8",
+    colorTextSecondary: "#a8b0c0",
+    colorBackground: "#1a1a20",
+    colorNeutral: "#f2f4f8",
+    colorInputText: "#f2f4f8",
+  },
+  elements: {
+    userButtonBox: "w-9 h-9",
+    userButtonTrigger: "focus:shadow-none",
+    userButtonPopoverCard: "!bg-[#1a1a20] !border !border-[#2a2a35] !shadow-xl",
+    userButtonPopoverActions: "!bg-[#1a1a20]",
+    userButtonPopoverActionButton: "!text-[#f2f4f8] hover:!bg-white/10",
+    userButtonPopoverActionButtonText: "!text-[#f2f4f8]",
+    userButtonPopoverActionButtonIcon: "!text-[#f2f4f8]",
+    userButtonPopoverFooter: "hidden",
+  },
+} as const;
+
 export default function AppUserButton() {
   const { openUserProfile, signOut } = useClerk();
 
   return (
-    <UserButton
-      afterSignOutUrl="/"
-      appearance={{
-        elements: {
-          userButtonBox: "w-9 h-9",
-          userButtonTrigger: "focus:shadow-none",
-        },
-      }}
-    >
+    <UserButton afterSignOutUrl="/" appearance={clerkDarkMenu}>
       <UserButton.MenuItems>
         <UserButton.Action
           label="Paramètres du compte"
