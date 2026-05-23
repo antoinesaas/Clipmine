@@ -3,7 +3,9 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import AppUserButton from "@/components/AppUserButton";
+import DiscordIcon from "@/components/DiscordIcon";
 import Logo from "@/components/Logo";
+import { DISCORD_URL } from "@/lib/constants";
 
 const NAV = [
   { href: "/app/search", label: "Chercher", icon: "M21 21l-4.3-4.3M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16z" },
@@ -26,6 +28,15 @@ export default function AppShell({
         <Logo className="logo app-logo" href="/app/search" />
         <div className="app-top-right">
           {quotaLabel && <span className="quota-badge">{quotaLabel}</span>}
+          <a
+            href={DISCORD_URL}
+            className="nav-discord"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Rejoindre le Discord ClipMine"
+          >
+            <DiscordIcon size={20} />
+          </a>
           <AppUserButton />
         </div>
       </header>

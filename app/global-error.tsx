@@ -1,8 +1,7 @@
 "use client";
 
 import DiscordIcon from "@/components/DiscordIcon";
-
-const DISCORD_URL = "https://discord.gg/Q4uBaxqDNJ";
+import { DISCORD_URL } from "@/lib/constants";
 
 export default function GlobalError({
   error,

@@ -1,5 +1,6 @@
 /** Email support client */
 export const SUPPORT_EMAIL = "antoinehofmann08@gmail.com";
+export const DISCORD_URL = "https://discord.gg/Q4uBaxqDNJ";
 export const PRIME_AFFILIATE_URL = "https://www.primevideo.com/?tag=clipmine-21";
 
 export const PRIME_AFFILIATE_LABEL = "Prime Video · 30 jours gratuits";

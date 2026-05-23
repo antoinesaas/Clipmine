@@ -1,8 +1,7 @@
 import Link from "next/link";
 import DiscordIcon from "@/components/DiscordIcon";
 import Logo from "@/components/Logo";
-
-const DISCORD_URL = "https://discord.gg/Q4uBaxqDNJ";
+import { DISCORD_URL } from "@/lib/constants";
 
 /** Nav landing 100 % statique (pas de Clerk) — visible immédiatement sur mobile. */
 export default function LandingNav() {
