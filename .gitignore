@@ -14,3 +14,4 @@ node_modules
 .env.check-prod
 .env.infra
 .env.vercel.check
+.env.vercel.prod

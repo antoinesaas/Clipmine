@@ -3,7 +3,7 @@ import { auth } from "@clerk/nextjs/server";
 import { prisma, hasDatabase } from "@/lib/prisma";
 import { ensureDbUser } from "@/lib/ensure-user";
 import { PLAN_QUOTAS } from "@/lib/entitlements";
-import { isPipelineReady } from "@/lib/pipeline";
+import { isPipelineReady, pipelineBlockMessage } from "@/lib/pipeline";
 
 // GET /api/me — renvoie l'état de l'utilisateur courant.
 // Si la base de données n'est pas configurée, on renvoie un état "waitlist" par défaut
@@ -23,6 +23,7 @@ export async function GET() {
       bonusCredits: 0,
       pipelineReady: false,
       waitlist: true,
+      pipelineMessage: pipelineBlockMessage(),
     });
   }
 
@@ -38,17 +39,23 @@ export async function GET() {
       bonusCredits: user.bonusCredits,
       pipelineReady,
       waitlist: !pipelineReady,
+      pipelineMessage: pipelineReady ? null : pipelineBlockMessage(),
     });
   } catch (e) {
     console.error("[/api/me] DB error", e);
+    const ready = isPipelineReady();
     return NextResponse.json({
       plan: "FREE",
       freeExportAvailable: true,
       exportsThisMonth: 0,
       monthlyQuota: PLAN_QUOTAS.FREE.monthly,
       bonusCredits: 0,
-      pipelineReady: false,
-      waitlist: true,
+      pipelineReady: ready,
+      waitlist: !ready,
+      dbError: true,
+      pipelineMessage: ready
+        ? "Connexion base de données temporaire — réessaie dans quelques secondes."
+        : pipelineBlockMessage(),
     });
   }
 }

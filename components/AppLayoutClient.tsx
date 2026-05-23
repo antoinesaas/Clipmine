@@ -12,6 +12,8 @@ type Me = {
   bonusCredits: number;
   waitlist?: boolean;
   pipelineReady?: boolean;
+  pipelineMessage?: string | null;
+  dbError?: boolean;
 };
 
 export function useMe() {
@@ -42,9 +44,10 @@ export default function AppLayoutClient({ children }: { children: React.ReactNod
   return (
     <AppShell quotaLabel={quotaLabel}>
       <ClerkProductionBanner />
-      {me?.waitlist && (
+      {me && me.pipelineReady === false && (
         <div className="waitlist-banner" role="status">
-          Export temporairement limité (worker ou stockage R2 non configuré sur le serveur). Contacte le support si le message persiste.
+          {me.pipelineMessage ??
+            "Export temporairement limité — configuration serveur incomplète."}
         </div>
       )}
       {children}
