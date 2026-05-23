@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { SignedIn, SignedOut, UserButton, useAuth, useClerk } from "@clerk/nextjs";
+import { SignedIn, SignedOut, UserButton, useClerk } from "@clerk/nextjs";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { TRENDING_FILMS, clipsForHero, buildHeroBgRows, DEMO_CLIPS, thumbForId } from "@/lib/demo-clips";
@@ -293,10 +293,7 @@ export default function Landing() {
             <button
               type="button"
               className="btn btn-primary btn-lg"
-              onClick={() => {
-                if (isSignedIn) router.push("/app/search");
-                else openSignIn({ forceRedirectUrl: "/app/search" });
-              }}
+              onClick={() => router.push("/app/search")}
             >
               Miner mon premier clip →
             </button>
