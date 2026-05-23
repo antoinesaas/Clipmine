@@ -68,6 +68,8 @@ async function proxyClerk(req: NextRequest, path: string[]) {
     if (lower === "clerk-proxy-url") return;
     headers.set(key, value);
   });
+  // fetch() Edge ajoute gzip par défaut — forcer une réponse non compressée
+  headers.set("Accept-Encoding", "identity");
   // Doit correspondre exactement au proxy_url du dashboard Clerk
   headers.set("Clerk-Proxy-Url", CLERK_PROXY_REGISTERED);
   headers.set("Clerk-Secret-Key", secret);
