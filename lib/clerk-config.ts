@@ -8,5 +8,5 @@ export const CLERK_PROXY_PUBLIC =
   process.env.NEXT_PUBLIC_CLERK_PROXY_URL?.replace(/\/$/, "") ??
   "https://www.clipmine.fr/api/clerk-fapi";
 
-/** v5 : compatible avec @clerk/nextjs 5.x (le proxy renvoie le bundle en entier). */
-export const CLERK_JS_URL = `${CLERK_PROXY_PUBLIC}/npm/@clerk/clerk-js@5/dist/clerk.browser.js`;
+/** v5.125.10 : compatible @clerk/nextjs 5.x + URL figée (évite cache navigateur sur @5/dist). */
+export const CLERK_JS_URL = `${CLERK_PROXY_PUBLIC}/npm/@clerk/clerk-js@5.125.10/dist/clerk.browser.js`;
