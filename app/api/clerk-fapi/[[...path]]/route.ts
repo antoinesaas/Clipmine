@@ -63,6 +63,8 @@ async function proxyClerk(req: NextRequest, path: string[]) {
   req.headers.forEach((value, key) => {
     const lower = key.toLowerCase();
     if (lower === "host" || lower === "connection" || lower === "content-length") return;
+    // Évite gzip/br tronqué côté Edge : le navigateur doit recevoir du JS en clair
+    if (lower === "accept-encoding") return;
     if (lower === "clerk-proxy-url") return;
     headers.set(key, value);
   });
@@ -88,12 +90,19 @@ async function proxyClerk(req: NextRequest, path: string[]) {
   const upstream = await fetch(target, init);
   const responseHeaders = new Headers(upstream.headers);
   responseHeaders.delete("content-encoding");
+  responseHeaders.delete("content-length");
   rewriteResponseHeaders(responseHeaders);
 
   const cors = corsHeaders(req);
   cors.forEach((value, key) => responseHeaders.set(key, value));
 
-  return new NextResponse(upstream.body, {
+  // Corps entier (évite flux compressés tronqués sur les gros bundles clerk.browser.js)
+  const body =
+    upstream.status === 204 || upstream.status === 304
+      ? null
+      : await upstream.arrayBuffer();
+
+  return new NextResponse(body, {
     status: upstream.status,
     statusText: upstream.statusText,
     headers: responseHeaders,
