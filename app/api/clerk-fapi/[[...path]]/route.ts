@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 const CLERK_FAPI = "https://frontend-api.clerk.dev";
 const PROXY_URL =
   process.env.NEXT_PUBLIC_CLERK_PROXY_URL?.replace(/\/$/, "") ??
-  "https://www.clipmine.fr/api/clerk-fapi";
+  "https://clipmine.fr/api/clerk-fapi";
 
 async function proxyClerk(req: NextRequest, path: string[]) {
   const secret = process.env.CLERK_SECRET_KEY;

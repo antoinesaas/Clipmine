@@ -56,7 +56,7 @@ export const viewport: Viewport = {
 };
 
 const clerkProxyUrl =
-  process.env.NEXT_PUBLIC_CLERK_PROXY_URL ?? "https://www.clipmine.fr/api/clerk-fapi";
+  process.env.NEXT_PUBLIC_CLERK_PROXY_URL ?? "https://clipmine.fr/api/clerk-fapi";
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
