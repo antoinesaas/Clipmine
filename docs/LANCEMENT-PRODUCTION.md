@@ -1,21 +1,14 @@
 # Checklist lancement public — ClipMine
 
-## 1. Clerk (obligatoire — corrige l’avertissement console)
+## 1. Clerk (obligatoire)
 
-**Problème actuel :** Vercel Production utilise `pk_test_...` → message « development keys ».
+**Clés Vercel Production :** `pk_live_Y2xlcmsuY2xpcG1pbmUuZnIk` + `sk_live_...` — déjà sur Vercel.
 
-1. [Clerk Dashboard](https://dashboard.clerk.com) → ton app → **API Keys**
-2. Passe en **Production** (pas Development)
-3. Copie `pk_live_...` et `sk_live_...`
-4. Vercel → Project → Settings → Environment Variables → **Production** :
+**Blocage actuel : DNS Clerk manquant** → voir **`docs/CLERK-DNS-CLIPMINE.md`** (5 CNAME à ajouter chez le registrar de `clipmine.fr`, dont `clerk` → `frontend-api.clerk.services`).
 
-```bash
-NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_live_...
-CLERK_SECRET_KEY=sk_live_...
-```
+Sans ces CNAME, `/sign-up` reste vide (le JS ne charge pas depuis `clerk.clipmine.fr`).
 
-5. Clerk → **Domains** → ajoute `www.clipmine.fr` et `clipmine.fr`
-6. **Redéploie** Vercel (obligatoire : les clés `NEXT_PUBLIC_*` sont injectées au build)
+Après DNS : Clerk Dashboard → **Domains** → Verified, puis redéploie Vercel si tu changes une variable.
 
 ---
 
