@@ -219,7 +219,7 @@ export default function Landing() {
           <div className="eyebrow">En action</div>
           <h2 className="h2">Ce que ClipMine produit.</h2>
           <p className="sec-sub">
-            Chaque carte montre un avant/après vidéo : recadrage 9:16, upscale 4K, stabilisation, denoise… Glisse ou touche pour comparer.
+            Chaque carte montre un avant/après : recadrage 9:16, upscale 4K, stabilisation, denoise… Glisse le curseur sur la vignette.
           </p>
 
           <FeatureShowcase />
