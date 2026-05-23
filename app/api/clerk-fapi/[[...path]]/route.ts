@@ -1,13 +1,37 @@
 import { NextRequest, NextResponse } from "next/server";
+import { CLERK_PROXY_URL } from "@/lib/clerk-config";
 
 const CLERK_FAPI = "https://frontend-api.clerk.dev";
 
+const ALLOWED_ORIGINS = new Set([
+  "https://www.clipmine.fr",
+  "https://clipmine.fr",
+  "http://localhost:3000",
+]);
+
+function corsHeaders(req: NextRequest): Headers {
+  const h = new Headers();
+  const origin = req.headers.get("origin");
+  if (origin && ALLOWED_ORIGINS.has(origin)) {
+    h.set("Access-Control-Allow-Origin", origin);
+    h.set("Access-Control-Allow-Credentials", "true");
+    h.set("Vary", "Origin");
+  }
+  h.set("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS");
+  h.set(
+    "Access-Control-Allow-Headers",
+    "Content-Type, Authorization, Clerk-Proxy-Url, Clerk-Secret-Key, X-Forwarded-For",
+  );
+  return h;
+}
+
 function proxyUrlFromRequest(req: NextRequest): string {
-  const configured = process.env.NEXT_PUBLIC_CLERK_PROXY_URL?.replace(/\/$/, "");
-  if (configured?.startsWith("http")) return configured;
-  const host = req.headers.get("x-forwarded-host") ?? req.headers.get("host") ?? "www.clipmine.fr";
-  const proto = req.headers.get("x-forwarded-proto") ?? "https";
-  return `${proto}://${host}/api/clerk-fapi`;
+  const host = req.headers.get("x-forwarded-host") ?? req.headers.get("host") ?? "";
+  if (host.startsWith("www.")) {
+    const proto = req.headers.get("x-forwarded-proto") ?? "https";
+    return `${proto}://${host}/api/clerk-fapi`;
+  }
+  return CLERK_PROXY_URL;
 }
 
 async function proxyClerk(req: NextRequest, path: string[]) {
@@ -48,6 +72,9 @@ async function proxyClerk(req: NextRequest, path: string[]) {
   const responseHeaders = new Headers(upstream.headers);
   responseHeaders.delete("content-encoding");
 
+  const cors = corsHeaders(req);
+  cors.forEach((value, key) => responseHeaders.set(key, value));
+
   return new NextResponse(upstream.body, {
     status: upstream.status,
     statusText: upstream.statusText,
@@ -56,6 +83,10 @@ async function proxyClerk(req: NextRequest, path: string[]) {
 }
 
 type Ctx = { params: { path?: string[] } };
+
+export async function OPTIONS(req: NextRequest) {
+  return new NextResponse(null, { status: 204, headers: corsHeaders(req) });
+}
 
 export async function GET(req: NextRequest, ctx: Ctx) {
   return proxyClerk(req, ctx.params.path ?? []);

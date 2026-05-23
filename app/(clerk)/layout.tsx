@@ -1,12 +1,11 @@
 import { ClerkProvider } from "@clerk/nextjs";
-
-const clerkProxyUrl =
-  process.env.NEXT_PUBLIC_CLERK_PROXY_URL ?? "/api/clerk-fapi";
+import { CLERK_JS_URL, CLERK_PROXY_URL } from "@/lib/clerk-config";
 
 export default function ClerkRootLayout({ children }: { children: React.ReactNode }) {
   return (
     <ClerkProvider
-      proxyUrl={clerkProxyUrl}
+      proxyUrl={CLERK_PROXY_URL}
+      clerkJSUrl={CLERK_JS_URL}
       signInUrl="/sign-in"
       signUpUrl="/sign-up"
       signInFallbackRedirectUrl="/app/search"
