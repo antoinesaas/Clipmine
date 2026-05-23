@@ -1,6 +1,5 @@
 "use client";
 
-import { useClerk, useAuth } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 
 export function searchHref(q: string) {
@@ -18,18 +17,12 @@ export default function AuthSearchButton({
   children: React.ReactNode;
   onClick?: () => void;
 }) {
-  const { isSignedIn } = useAuth();
-  const { openSignIn } = useClerk();
   const router = useRouter();
   const href = searchHref(query);
 
   function handleClick() {
     onClick?.();
-    if (isSignedIn) {
-      router.push(href);
-      return;
-    }
-    openSignIn({ forceRedirectUrl: href });
+    router.push(href);
   }
 
   return (

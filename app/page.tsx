@@ -5,18 +5,21 @@ import { SignedIn, SignedOut, UserButton, useAuth, useClerk } from "@clerk/nextj
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { TRENDING_FILMS, clipsForHero, buildHeroBgRows, DEMO_CLIPS, thumbForId } from "@/lib/demo-clips";
-import AuthSearchButton from "@/components/AuthSearchButton";
+import { normalizeSearchQuery } from "@/lib/normalize-search-query";
 import PricingPlans from "@/components/PricingPlans";
 import FeatureShowcase from "@/components/FeatureShowcase";
 import ImageBeforeAfter from "@/components/ImageBeforeAfter";
 import { SUPPORT_EMAIL } from "@/lib/constants";
 
-const CHIPS = [
-  ["Inception", "Inception movie scene"],
-  ["Breaking Bad", "Breaking Bad series scene"],
-  ["Dark Knight", "Dark Knight Joker scene"],
-  ["Interstellar", "Interstellar docking scene"],
-  ["Game of Thrones", "Game of Thrones battle scene"],
+const HERO_SUGGESTIONS: [string, string][] = [
+  ["Inception", "Inception"],
+  ["Breaking Bad", "Breaking Bad"],
+  ["Dark Knight", "Dark Knight"],
+  ["Interstellar", "Interstellar"],
+  ["Game of Thrones", "Game of Thrones"],
+  ...TRENDING_FILMS.filter(
+    ([label]) => !["Inception", "Breaking Bad", "Interstellar", "Game of Thrones"].includes(label),
+  ),
 ];
 
 const MODELS = [
@@ -41,25 +44,15 @@ function isYoutubeUrl(s: string) {
 
 export default function Landing() {
   const router = useRouter();
-  const { isSignedIn } = useAuth();
   const { openSignIn } = useClerk();
   const [bgRows] = useState(() => buildHeroBgRows());
   const [query, setQuery] = useState("");
 
   function goSearch(q?: string) {
-    const term = (q ?? query).trim() || "Inception movie scene 4k";
-    setQuery(term);
-    const href = `/app/search?q=${encodeURIComponent(term)}`;
-    if (isSignedIn) {
-      router.push(href);
-      return;
-    }
-    openSignIn({ forceRedirectUrl: href });
-  }
-
-  function searchUrl(q?: string) {
-    const term = (q ?? query).trim();
-    return term ? `/app/search?q=${encodeURIComponent(term)}` : "/app/search";
+    const raw = (q ?? query).trim() || "Inception";
+    const { userInput, apiQuery } = normalizeSearchQuery(raw);
+    setQuery(userInput);
+    router.push(`/app/search?q=${encodeURIComponent(apiQuery)}`);
   }
 
   return (
@@ -145,21 +138,25 @@ export default function Landing() {
                   placeholder="Film, scène ou lien YouTube"
                 />
               </div>
-              <AuthSearchButton query={query || "Inception movie scene 4k"} className="btn btn-primary btn-mine-hero">
+              <button
+                type="button"
+                className="btn btn-primary btn-mine-hero"
+                onClick={() => goSearch()}
+              >
                 Mine →
-              </AuthSearchButton>
+              </button>
             </div>
             <div className="chips-scroll">
               <div className="chips">
-                {CHIPS.map(([label, q]) => (
-                  <AuthSearchButton key={q} query={q} className="chip">
+                {HERO_SUGGESTIONS.map(([label, q]) => (
+                  <button
+                    key={label}
+                    type="button"
+                    className="chip"
+                    onClick={() => goSearch(q)}
+                  >
                     {label}
-                  </AuthSearchButton>
-                ))}
-                {TRENDING_FILMS.filter(([label]) => !CHIPS.some(([chipLabel]) => chipLabel === label)).map(([label, q]) => (
-                  <AuthSearchButton key={`t-${q}`} query={q} className="chip chip-trend">
-                    {label}
-                  </AuthSearchButton>
+                  </button>
                 ))}
               </div>
             </div>
@@ -169,13 +166,6 @@ export default function Landing() {
           </div>
         </div>
 
-        <div className="trending-row">
-          {TRENDING_FILMS.map(([label, q]) => (
-            <AuthSearchButton key={q} query={q} className="trending-pill">
-              {label}
-            </AuthSearchButton>
-          ))}
-        </div>
       </header>
 
       {/* TRUSTED BY */}

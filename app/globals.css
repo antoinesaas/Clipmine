@@ -275,22 +275,25 @@ h1 .grad {
   padding: 0 16px 2px;
   overflow-x: auto; -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
+  position: relative;
+  z-index: 4;
 }
 .chips-scroll::-webkit-scrollbar { display: none; }
 .chips {
-  display: flex; gap: 8px; flex-wrap: wrap;
-  justify-content: center;
-  width: 100%;
-  max-width: 100%;
+  display: flex; gap: 8px; flex-wrap: nowrap;
+  justify-content: flex-start;
+  width: max-content;
+  min-width: 100%;
+  padding-bottom: 2px;
 }
 .chip {
   flex-shrink: 0;
-  max-width: calc(50% - 4px);
   font-size: 12px; color: var(--mut);
   background: var(--surface); border: 1px solid var(--line);
   padding: 8px 14px; border-radius: 99px; cursor: pointer;
   transition: all 0.15s; font-family: var(--body);
   display: inline-flex; align-items: center;
+  white-space: nowrap;
 }
 .chip:hover, .chip:active {
   color: var(--txt); border-color: rgba(0, 102, 255, 0.5);
@@ -299,26 +302,6 @@ h1 .grad {
 .hero-note {
   margin-top: 12px; font-size: 11px; color: var(--dim);
   font-family: var(--mono); line-height: 1.4;
-}
-.chip-trend { border-color: rgba(0, 102, 255, 0.25); color: var(--accent-2); }
-
-/* === TRENDING FILMS — desktop only in hero === */
-.trending-row {
-  display: none;
-  justify-content: center; gap: 10px;
-  flex-wrap: wrap; margin-top: 48px; padding: 20px 16px;
-  border-top: 1px solid var(--line);
-  background: linear-gradient(to bottom, rgba(0,102,255,0.04), transparent);
-}
-.trending-pill {
-  font-size: 13px; font-weight: 600; color: var(--mut);
-  background: var(--surface); border: 1px solid var(--line);
-  padding: 10px 18px; border-radius: 99px; cursor: pointer;
-  transition: all 0.15s; font-family: var(--body);
-}
-.trending-pill:hover {
-  color: var(--accent-2); border-color: rgba(0, 102, 255, 0.45);
-  background: rgba(0, 102, 255, 0.1); transform: translateY(-1px);
 }
 
 /* === MODELS ROW (legacy) === */
@@ -1833,13 +1816,14 @@ footer {
   }
   .chips-scroll {
     margin-top: 16px; margin-left: 0; margin-right: 0;
-    padding: 0; overflow: visible;
+    padding: 0; overflow-x: auto;
   }
-  .chips { flex-wrap: wrap; justify-content: center; width: auto; min-width: 0; }
+  .chips {
+    flex-wrap: nowrap; justify-content: center;
+    width: max-content; min-width: 100%; margin: 0 auto;
+  }
   .chip { font-size: 13px; padding: 7px 14px; }
-  .chip-trend { display: none; }
   .hero-note { margin-top: 18px; font-size: 13px; }
-  .trending-row { display: flex; margin-top: 56px; padding: 24px 16px; }
   section { padding: 110px 0; }
   .sec-sub { margin-bottom: 64px; font-size: 17px; }
 }
@@ -1862,15 +1846,11 @@ footer {
   .trusted { padding: 32px 0 28px; }
   .wrap, .wrap-sm { padding-left: max(16px, env(safe-area-inset-left)); padding-right: max(16px, env(safe-area-inset-right)); }
   .chips-scroll {
-    margin-left: 0; margin-right: 0; padding: 0;
-    overflow: visible;
+    margin-left: -16px; margin-right: -16px; padding: 0 16px;
+    overflow-x: auto;
   }
-  .chips { gap: 6px; }
-  .chip {
-    max-width: none;
-    font-size: 11px;
-    padding: 7px 11px;
-  }
+  .chips { gap: 6px; flex-wrap: nowrap; justify-content: flex-start; }
+  .chip { font-size: 11px; padding: 7px 11px; }
   section { padding: 48px 0; }
   .sec-sub { margin-bottom: 28px; font-size: 14px; }
   .search-shell {
