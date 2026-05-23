@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import AppUserButton from "@/components/AppUserButton";
+import Logo from "@/components/Logo";
 
 const NAV = [
   { href: "/app/search", label: "Chercher", icon: "M21 21l-4.3-4.3M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16z" },
@@ -22,9 +23,7 @@ export default function AppShell({
   return (
     <div className="app-shell">
       <header className="app-top">
-        <Link href="/app/search" className="logo app-logo">
-          <span className="dot" />Clip<span className="b">Mine</span>
-        </Link>
+        <Logo className="logo app-logo" href="/app/search" />
         <div className="app-top-right">
           {quotaLabel && <span className="quota-badge">{quotaLabel}</span>}
           <AppUserButton />

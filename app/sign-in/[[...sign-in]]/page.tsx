@@ -1,8 +1,15 @@
 import { SignIn } from "@clerk/nextjs";
-export default function Page() {
+
+export default function SignInPage() {
   return (
-    <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#08080C" }}>
-      <SignIn />
+    <div className="auth-page">
+      <SignIn
+        routing="path"
+        path="/sign-in"
+        signUpUrl="/sign-up"
+        fallbackRedirectUrl="/app/search"
+        forceRedirectUrl="/app/search"
+      />
     </div>
   );
 }

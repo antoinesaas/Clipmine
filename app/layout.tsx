@@ -58,6 +58,12 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <ClerkProvider
+      signInUrl="/sign-in"
+      signUpUrl="/sign-up"
+      signInFallbackRedirectUrl="/app/search"
+      signUpFallbackRedirectUrl="/app/search"
+      afterSignInUrl="/app/search"
+      afterSignUpUrl="/app/search"
       appearance={{
         variables: {
           colorPrimary: "#0066FF",

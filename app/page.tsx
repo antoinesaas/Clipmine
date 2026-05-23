@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { SignedIn, SignedOut, UserButton, useClerk } from "@clerk/nextjs";
+import { SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
 import Link from "next/link";
+import Logo from "@/components/Logo";
 import { useRouter } from "next/navigation";
 import { TRENDING_FILMS, clipsForHero, buildHeroBgRows, DEMO_CLIPS, thumbForId } from "@/lib/demo-clips";
 import { normalizeSearchQuery } from "@/lib/normalize-search-query";
@@ -44,7 +45,6 @@ function isYoutubeUrl(s: string) {
 
 export default function Landing() {
   const router = useRouter();
-  const { openSignIn } = useClerk();
   const [bgRows] = useState(() => buildHeroBgRows());
   const [query, setQuery] = useState("");
 
@@ -59,21 +59,19 @@ export default function Landing() {
     <>
       <nav className="site-nav">
         <div className="nav-in">
-          <Link href="/" className="logo">
-            <span className="dot" />Clip<span className="b">Mine</span>
-          </Link>
+          <Logo />
           <div className="nav-links">
             <a href="#models">Modèles AI</a>
             <a href="#demos">Démos</a>
             <a href="#pricing">Tarifs</a>
-            <SignedOut><button type="button" className="nav-link-btn" onClick={() => openSignIn()}>Connexion</button></SignedOut>
+            <SignedOut><Link href="/sign-in" className="nav-link-btn">Connexion</Link></SignedOut>
             <SignedIn><Link href="/app/search">Mon espace</Link></SignedIn>
           </div>
           <SignedOut>
-            <button type="button" className="btn btn-primary btn-nav-cta" onClick={() => openSignIn({ forceRedirectUrl: "/app/search" })}>
+            <Link href="/sign-up" className="btn btn-primary btn-nav-cta">
               <span className="only-desktop">Essayer gratuitement</span>
               <span className="only-mobile">Essayer</span>
-            </button>
+            </Link>
           </SignedOut>
           <SignedIn><UserButton afterSignOutUrl="/" /></SignedIn>
         </div>
@@ -305,9 +303,7 @@ export default function Landing() {
       <footer>
         <div className="foot-grid">
           <div className="foot-col">
-            <Link href="/" className="logo">
-              <span className="dot" />Clip<span className="b">Mine</span>
-            </Link>
+            <Logo />
             <p className="foot-tagline">
               Cinema-grade AI video enhancement. La matière première de tes édits, minée et upscalée en secondes.
             </p>

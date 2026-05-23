@@ -1,8 +1,8 @@
 "use client";
 
+import Link from "next/link";
 import CheckoutButton from "@/components/CheckoutButton";
 import { PRICING, formatPrice, planBullets } from "@/lib/plans";
-import { useClerk } from "@clerk/nextjs";
 
 function Check() {
   return (
@@ -26,7 +26,6 @@ function BulletList({ plan }: { plan: "FREE" | "CREATOR" | "PRO" }) {
 }
 
 export default function PricingPlans() {
-  const { openSignIn } = useClerk();
   const c = PRICING.CREATOR;
   const p = PRICING.PRO;
 
@@ -37,9 +36,9 @@ export default function PricingPlans() {
         <p className="pdesc">Pour tester</p>
         <div className="price">0€</div>
         <BulletList plan="FREE" />
-        <button type="button" className="btn btn-ghost" onClick={() => openSignIn({ forceRedirectUrl: "/app/search" })}>
+        <Link href="/sign-up" className="btn btn-ghost">
           Commencer
-        </button>
+        </Link>
       </div>
 
       <div className="plan feat-plan">

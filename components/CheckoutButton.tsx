@@ -1,6 +1,7 @@
 "use client";
 
-import { useClerk, useAuth } from "@clerk/nextjs";
+import { useAuth } from "@clerk/nextjs";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -18,7 +19,7 @@ export default function CheckoutButton({
   redirectAfterSignIn?: string;
 }) {
   const { isSignedIn } = useAuth();
-  const { openSignIn } = useClerk();
+  const router = useRouter();
   const [loading, setLoading] = useState(false);
 
   async function startCheckout() {
@@ -35,9 +36,8 @@ export default function CheckoutButton({
         return;
       }
       if (r.status === 401) {
-        openSignIn({
-          forceRedirectUrl: redirectAfterSignIn ?? `/app/billing?checkout=${plan}`,
-        });
+        const next = redirectAfterSignIn ?? `/app/billing?checkout=${plan}`;
+        router.push(`/sign-up?redirect_url=${encodeURIComponent(next)}`);
         return;
       }
       if (!r.ok || !data.url) {
@@ -58,9 +58,8 @@ export default function CheckoutButton({
       void startCheckout();
       return;
     }
-    openSignIn({
-      forceRedirectUrl: redirectAfterSignIn ?? `/app/billing?checkout=${plan}`,
-    });
+    const next = redirectAfterSignIn ?? `/app/billing?checkout=${plan}`;
+    router.push(`/sign-up?redirect_url=${encodeURIComponent(next)}`);
   }
 
   return (
