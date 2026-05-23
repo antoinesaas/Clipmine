@@ -1,6 +1,5 @@
 "use client";
 
-import { useAuth } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -18,7 +17,6 @@ export default function CheckoutButton({
   children: React.ReactNode;
   redirectAfterSignIn?: string;
 }) {
-  const { isSignedIn } = useAuth();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
 
@@ -54,12 +52,7 @@ export default function CheckoutButton({
 
   function handleClick() {
     if (loading) return;
-    if (isSignedIn) {
-      void startCheckout();
-      return;
-    }
-    const next = redirectAfterSignIn ?? `/app/billing?checkout=${plan}`;
-    router.push(`/sign-up?redirect_url=${encodeURIComponent(next)}`);
+    void startCheckout();
   }
 
   return (

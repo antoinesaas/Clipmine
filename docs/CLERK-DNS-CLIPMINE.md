@@ -46,6 +46,20 @@ Après chaque changement d’env : **redéployer** (`npx vercel --prod`).
 3. Ouvrir [https://www.clipmine.fr/sign-up](https://www.clipmine.fr/sign-up) → formulaire Clerk visible.
 4. Clerk Dashboard → **Domains** → statut **Verified** (plus « Unverified »).
 
+### DKIM + emails (clkmail, clk._domainkey, clk2._domainkey)
+
+Enregistrements requis (Hostinger / registrar de `clipmine.fr`) :
+
+| Host | Type | Cible exacte |
+|------|------|----------------|
+| `clk._domainkey` | CNAME | `dkim1.slhyvut93m7a.clerk.services` |
+| `clk2._domainkey` | CNAME | `dkim2.slhyvut93m7a.clerk.services` |
+| `clkmail` | CNAME | `mail.slhyvut93m7a.clerk.services` |
+
+Pas de proxy orange (DNS only). Puis **Verify** dans Clerk → Domains.
+
+**Auth Google** : les CNAME `clerk` / `accounts` ne sont plus obligatoires si le proxy `https://clipmine.fr/api/clerk-fapi` est actif.
+
 ## Dashboard Clerk
 
 [API Keys (instance production)](https://dashboard.clerk.com/apps/app_3E0I8LVBZ18ifEZM2d9qbKTafYP/instances/ins_3E7SjhAdUXjywHUo3VcTxsm7qnf/api-keys)

@@ -1,9 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 
 const CLERK_FAPI = "https://frontend-api.clerk.dev";
-const PROXY_URL =
-  process.env.NEXT_PUBLIC_CLERK_PROXY_URL?.replace(/\/$/, "") ??
-  "https://clipmine.fr/api/clerk-fapi";
+
+function proxyUrlFromRequest(req: NextRequest): string {
+  const configured = process.env.NEXT_PUBLIC_CLERK_PROXY_URL?.replace(/\/$/, "");
+  if (configured?.startsWith("http")) return configured;
+  const host = req.headers.get("x-forwarded-host") ?? req.headers.get("host") ?? "www.clipmine.fr";
+  const proto = req.headers.get("x-forwarded-proto") ?? "https";
+  return `${proto}://${host}/api/clerk-fapi`;
+}
 
 async function proxyClerk(req: NextRequest, path: string[]) {
   const secret = process.env.CLERK_SECRET_KEY;
@@ -13,6 +18,7 @@ async function proxyClerk(req: NextRequest, path: string[]) {
 
   const subpath = path.join("/");
   const target = `${CLERK_FAPI}/${subpath}${req.nextUrl.search}`;
+  const proxyUrl = proxyUrlFromRequest(req);
 
   const headers = new Headers();
   req.headers.forEach((value, key) => {
@@ -20,7 +26,7 @@ async function proxyClerk(req: NextRequest, path: string[]) {
     if (lower === "host" || lower === "connection" || lower === "content-length") return;
     headers.set(key, value);
   });
-  headers.set("Clerk-Proxy-Url", PROXY_URL);
+  headers.set("Clerk-Proxy-Url", proxyUrl);
   headers.set("Clerk-Secret-Key", secret);
   headers.set(
     "X-Forwarded-For",

@@ -1,8 +1,14 @@
-import { ClerkProvider } from "@clerk/nextjs";
 import { Toaster } from "sonner";
 import { Analytics } from "@vercel/analytics/react";
 import type { Metadata, Viewport } from "next";
+import { Inter } from "next/font/google";
 import "./globals.css";
+
+const inter = Inter({
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-inter",
+});
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://www.clipmine.fr"),
@@ -55,38 +61,15 @@ export const viewport: Viewport = {
   viewportFit: "cover",
 };
 
-const clerkProxyUrl =
-  process.env.NEXT_PUBLIC_CLERK_PROXY_URL ?? "https://clipmine.fr/api/clerk-fapi";
-
+/** Layout racine sans Clerk — la landing s'affiche même si Clerk JS échoue. */
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <ClerkProvider
-      proxyUrl={clerkProxyUrl}
-      signInUrl="/sign-in"
-      signUpUrl="/sign-up"
-      signInFallbackRedirectUrl="/app/search"
-      signUpFallbackRedirectUrl="/app/search"
-      afterSignInUrl="/app/search"
-      afterSignUpUrl="/app/search"
-      appearance={{
-        variables: {
-          colorPrimary: "#0066FF",
-          colorBackground: "#0B0B10",
-          colorText: "#FFFFFF",
-          colorInputBackground: "#16161F",
-          colorInputText: "#FFFFFF",
-          borderRadius: "12px",
-          fontFamily: "Inter, sans-serif",
-        },
-      }}
-    >
-      <html lang="fr">
-        <body>
-          {children}
-          <Toaster theme="dark" position="bottom-center" richColors />
-          <Analytics />
-        </body>
-      </html>
-    </ClerkProvider>
+    <html lang="fr" className={inter.variable}>
+      <body className={inter.className}>
+        {children}
+        <Toaster theme="dark" position="bottom-center" richColors />
+        <Analytics />
+      </body>
+    </html>
   );
 }

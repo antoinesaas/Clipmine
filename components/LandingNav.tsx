@@ -1,13 +1,8 @@
-"use client";
-
 import Link from "next/link";
 import Logo from "@/components/Logo";
-import { useAuth } from "@clerk/nextjs";
 
-/** Nav landing : liens statiques si Clerk JS ne charge pas (SSL / réseau). */
+/** Nav landing 100 % statique (pas de Clerk) — visible immédiatement sur mobile. */
 export default function LandingNav() {
-  const { isLoaded, isSignedIn } = useAuth();
-
   return (
     <nav className="site-nav">
       <div className="nav-in">
@@ -16,24 +11,14 @@ export default function LandingNav() {
           <a href="#models">Modèles AI</a>
           <a href="#demos">Démos</a>
           <a href="#pricing">Tarifs</a>
-          {isLoaded && isSignedIn ? (
-            <Link href="/app/search">Mon espace</Link>
-          ) : (
-            <Link href="/sign-in" className="nav-link-btn">
-              Connexion
-            </Link>
-          )}
+          <Link href="/sign-in" className="nav-link-btn">
+            Connexion
+          </Link>
         </div>
-        {isLoaded && isSignedIn ? (
-          <Link href="/app/search" className="btn btn-primary btn-nav-cta">
-            Mon espace
-          </Link>
-        ) : (
-          <Link href="/sign-up" className="btn btn-primary btn-nav-cta">
-            <span className="only-desktop">Essayer gratuitement</span>
-            <span className="only-mobile">Essayer</span>
-          </Link>
-        )}
+        <Link href="/sign-up" className="btn btn-primary btn-nav-cta">
+          <span className="only-desktop">Essayer gratuitement</span>
+          <span className="only-mobile">Essayer</span>
+        </Link>
       </div>
     </nav>
   );
