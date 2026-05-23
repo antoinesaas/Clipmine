@@ -144,17 +144,53 @@ img, svg { display: block; max-width: 100%; }
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 40px;
-  height: 40px;
-  border-radius: 10px;
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
   color: #fff;
-  background: rgba(88, 101, 242, 0.2);
-  border: 1px solid rgba(88, 101, 242, 0.45);
-  transition: background 0.15s, border-color 0.15s;
+  background: #5865f2;
+  border: none;
+  transition: background 0.15s, transform 0.15s;
 }
 .nav-discord:hover {
-  background: rgba(88, 101, 242, 0.35);
-  border-color: rgba(88, 101, 242, 0.7);
+  background: #4752c4;
+}
+.nav-discord svg {
+  display: block;
+  flex-shrink: 0;
+}
+.app-header-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.app-user-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+}
+.app-user-btn .cl-rootBox,
+.app-user-btn .cl-userButtonBox,
+.app-user-btn .cl-userButtonTrigger {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 36px !important;
+  height: 36px !important;
+  min-width: 36px !important;
+  min-height: 36px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+.app-user-btn .cl-userButtonAvatarBox,
+.app-user-btn .cl-avatarBox {
+  width: 32px !important;
+  height: 32px !important;
 }
 .btn-nav-cta {
   padding: 9px 14px !important;
@@ -1460,7 +1496,6 @@ footer {
 }
 .prime-buy-btn-short { display: none; }
 .prime-buy-btn:active { transform: scale(0.98); }
-.app-top-right .cl-userButtonBox { width: 36px; height: 36px; }
 .cl-userButtonPopoverCard,
 .cl-userButtonPopoverActions {
   background: #1a1a20 !important;

@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { toast } from "sonner";
 import {
   PIPELINE_UI_STAGES,
   computeProgressPercent,
@@ -57,6 +58,7 @@ export default function ExportProgressView({
         window.open(data.fileUrl, "_blank", "noopener,noreferrer");
         return;
       }
+      toast.error("Impossible d'ouvrir le fichier — réessaie depuis Mes exports.");
     } finally {
       setDownloading(false);
     }

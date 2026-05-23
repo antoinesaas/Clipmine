@@ -44,7 +44,7 @@ export default function AppLayoutClient({ children }: { children: React.ReactNod
       <ClerkProductionBanner />
       {me?.waitlist && (
         <div className="waitlist-banner" role="status">
-          Pipeline export en connexion — si le téléchargement échoue, réessaie dans 1–2 min.
+          Export temporairement limité (worker ou stockage R2 non configuré sur le serveur). Contacte le support si le message persiste.
         </div>
       )}
       {children}

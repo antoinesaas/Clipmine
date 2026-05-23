@@ -12,8 +12,9 @@ const clerkDarkMenu = {
     colorInputText: "#f2f4f8",
   },
   elements: {
-    userButtonBox: "w-9 h-9",
-    userButtonTrigger: "focus:shadow-none",
+    userButtonBox: "app-clerk-user-box",
+    userButtonTrigger: "app-clerk-user-trigger focus:shadow-none",
+    userButtonAvatarBox: "app-clerk-user-avatar",
     userButtonPopoverCard: "!bg-[#1a1a20] !border !border-[#2a2a35] !shadow-xl",
     userButtonPopoverActions: "!bg-[#1a1a20]",
     userButtonPopoverActionButton: "!text-[#f2f4f8] hover:!bg-white/10",

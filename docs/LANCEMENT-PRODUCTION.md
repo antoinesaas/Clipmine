@@ -12,13 +12,17 @@ Après DNS : Clerk Dashboard → **Domains** → Verified, puis redéploie Verce
 
 ---
 
-## 2. Stripe
+## 2. Google (connexion)
 
-Remplacer `pk_test_` / `sk_test_` par les clés **Live** et les `price_` live sur Vercel Production.
+Voir **`docs/GOOGLE-OAUTH-CLERK.md`** — si Google affiche *OAuth client was not found*, le Client ID dans Clerk est incorrect (sur ClipMine, une URL de callback avait été collée à la place du Client ID `….apps.googleusercontent.com`).
+
+## 3. Stripe
+
+Remplacer `pk_test_` / `sk_test_` par les clés **Live** et les `price_` live sur Vercel Production. Détails variables : `docs/GOOGLE-OAUTH-CLERK.md` (section Stripe).
 
 ---
 
-## 3. YouTube exports (Fly)
+## 4. YouTube exports (Fly)
 
 ```bash
 curl https://clipmine-worker.fly.dev/health
@@ -33,13 +37,13 @@ fly secrets set YT_COOKIES_BASE64="<base64 de cookies.txt>" -a clipmine-worker
 
 ---
 
-## 4. Google Search Console
+## 5. Google Search Console
 
 Voir `docs/GOOGLE-SEARCH-CONSOLE.md` — méthode **Préfixe d’URL** + `www.clipmine.fr`.
 
 ---
 
-## 5. Variables Vercel Production (résumé)
+## 6. Variables Vercel Production (résumé)
 
 | Variable | Attendu |
 |----------|---------|
@@ -53,7 +57,7 @@ Voir `docs/GOOGLE-SEARCH-CONSOLE.md` — méthode **Préfixe d’URL** + `www.cl
 
 ---
 
-## 6. Après déploiement
+## 7. Après déploiement
 
 - [ ] Plus d’avertissement Clerk dans la console sur www.clipmine.fr
 - [ ] Connexion / inscription OK

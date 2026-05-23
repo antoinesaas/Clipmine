@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { prisma, hasDatabase } from "@/lib/prisma";
+import { ensureDbUser } from "@/lib/ensure-user";
 import { refreshExportFileUrl } from "@/lib/user-exports";
 
 /** GET — URL signée fraîche pour retélécharger un export. */
@@ -9,8 +10,7 @@ export async function GET(_req: NextRequest, { params }: { params: { id: string 
   if (!clerkId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   if (!hasDatabase) return NextResponse.json({ error: "no_db" }, { status: 503 });
 
-  const user = await prisma.user.findUnique({ where: { clerkId } });
-  if (!user) return NextResponse.json({ error: "no_user" }, { status: 404 });
+  const user = await ensureDbUser(clerkId);
 
   const dl = await prisma.download.findFirst({
     where: { id: params.id, userId: user.id },

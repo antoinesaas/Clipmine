@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { prisma, hasDatabase } from "@/lib/prisma";
+import { ensureDbUser } from "@/lib/ensure-user";
 import { checkExportEntitlement, consumeExport } from "@/lib/entitlements";
 import { hasWorker, WORKER_SECRET, WORKER_URL } from "@/lib/constants";
 import { sanitizeTools, type AiToolId } from "@/lib/video-tools";
@@ -74,8 +75,7 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const user = await prisma.user.findUnique({ where: { clerkId } });
-    if (!user) return NextResponse.json({ error: "no_user" }, { status: 404 });
+    const user = await ensureDbUser(clerkId);
 
     const ent = await checkExportEntitlement(user.id);
     if (!ent.allowed) {

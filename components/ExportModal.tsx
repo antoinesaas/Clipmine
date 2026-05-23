@@ -182,7 +182,15 @@ export function ExportModal({
         return;
       }
       if (!r.ok) {
-        toast.error(data.message ?? "Erreur export");
+        const msg =
+          data.error === "no_user"
+            ? "Compte en cours de création — réessaie dans quelques secondes."
+            : data.message ?? "Erreur export";
+        toast.error(msg);
+        return;
+      }
+      if (data.error) {
+        toast.error(data.message ?? "Export échoué — réessaie dans une minute.");
         return;
       }
       const jobId = data.jobId ?? String(Date.now());

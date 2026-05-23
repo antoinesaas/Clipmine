@@ -25,7 +25,7 @@ export default function LandingNav() {
             rel="noopener noreferrer"
             aria-label="Rejoindre le Discord ClipMine"
           >
-            <DiscordIcon size={20} />
+            <DiscordIcon size={18} />
           </a>
           <Link href="/sign-up" className="btn btn-primary btn-nav-cta">
             <span className="only-desktop">Essayer gratuitement</span>

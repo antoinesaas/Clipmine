@@ -28,16 +28,20 @@ export default function AppShell({
         <Logo className="logo app-logo" href="/app/search" />
         <div className="app-top-right">
           {quotaLabel && <span className="quota-badge">{quotaLabel}</span>}
-          <a
-            href={DISCORD_URL}
-            className="nav-discord"
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label="Rejoindre le Discord ClipMine"
-          >
-            <DiscordIcon size={20} />
-          </a>
-          <AppUserButton />
+          <div className="app-header-actions">
+            <a
+              href={DISCORD_URL}
+              className="nav-discord"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Rejoindre le Discord ClipMine"
+            >
+              <DiscordIcon size={18} />
+            </a>
+            <div className="app-user-btn">
+              <AppUserButton />
+            </div>
+          </div>
         </div>
       </header>
 

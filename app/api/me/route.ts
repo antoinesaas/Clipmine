@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
-import { auth, currentUser } from "@clerk/nextjs/server";
+import { auth } from "@clerk/nextjs/server";
 import { prisma, hasDatabase } from "@/lib/prisma";
+import { ensureDbUser } from "@/lib/ensure-user";
 import { PLAN_QUOTAS } from "@/lib/entitlements";
 import { isPipelineReady } from "@/lib/pipeline";
 
@@ -26,13 +27,7 @@ export async function GET() {
   }
 
   try {
-    let user = await prisma.user.findUnique({ where: { clerkId } });
-    if (!user) {
-      const cu = await currentUser();
-      user = await prisma.user.create({
-        data: { clerkId, email: cu?.emailAddresses[0]?.emailAddress ?? `${clerkId}@clipmine.fr` },
-      });
-    }
+    const user = await ensureDbUser(clerkId);
 
     const quota = PLAN_QUOTAS[user.plan as keyof typeof PLAN_QUOTAS].monthly;
     return NextResponse.json({
