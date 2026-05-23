@@ -93,7 +93,7 @@ export default function ExportProgressView({
         <div className="export-progress-header">
           <span className="export-progress-pulse" aria-hidden />
           <div>
-            <h1>Pipeline en cours</h1>
+            <h1>{failed ? "Export échoué" : ready ? "Clip prêt" : "Préparation de ton clip"}</h1>
             <p className="export-progress-title">{title}</p>
             <p className="export-progress-meta">
               {ratio} · {quality}
@@ -160,6 +160,13 @@ export default function ExportProgressView({
         {failed && (
           <div className="export-progress-error">
             <p>{data?.errorMessage ?? "Export échoué."}</p>
+            {/téléchargement|youtube|privée|réseau/i.test(data?.errorMessage ?? "") && (
+              <p className="export-progress-error-tip">
+                Essaie un autre clip (Movieclips / scene pack), ou colle un lien YouTube direct.
+                Les blocages YouTube côté serveur nécessitent parfois des cookies sur Fly (
+                <code>YT_COOKIES_BASE64</code>).
+              </p>
+            )}
             <Link href="/app/search" className="btn-mine">
               Nouvelle recherche
             </Link>

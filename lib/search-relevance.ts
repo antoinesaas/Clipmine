@@ -31,15 +31,18 @@ export function clipRelevanceScore(clip: RelevanceInput, query: string, filmSear
   const tokens = queryTokens(query);
   let s = clip.viralScore;
 
-  if (EDIT_SOURCE_RE.test(hay)) s += 55;
-  if (EDIT_READY_CHANNEL_RE.test(clip.channel)) s += 28;
-  if (/movieclips/i.test(clip.channel)) s += 35;
+  if (EDIT_SOURCE_RE.test(hay)) s += 60;
+  if (EDIT_READY_CHANNEL_RE.test(clip.channel)) s += 32;
+  if (/movieclips/i.test(clip.channel)) s += 42;
   if (clip.is4K || /\b4k|2160|uhd|imax\b/i.test(hay)) s += 14;
 
   if (tokens.length) {
     const matched = tokens.filter((w) => hay.includes(w)).length;
-    s += matched * 22;
-    if (matched === tokens.length) s += 25;
+    s += matched * 26;
+    if (matched === tokens.length) s += 35;
+    if (tokens.length >= 1 && clip.title.toLowerCase().startsWith(tokens[0]!)) s += 20;
+    const titleMatchRatio = matched / tokens.length;
+    if (titleMatchRatio >= 0.8) s += 18;
   }
 
   if (filmSearch && KNOWN_FILM_TITLES.test(hay)) s += 18;

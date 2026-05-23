@@ -1282,6 +1282,24 @@ footer {
   font-size: 13px; color: var(--mut); line-height: 1.5; margin-bottom: 14px;
 }
 .search-hint strong { color: var(--txt); font-weight: 600; }
+.search-hint-sub { display: block; margin-top: 4px; color: var(--dim); font-size: 11px; }
+.search-query-used {
+  font-size: 11px; color: var(--dim); margin: -4px 0 10px;
+  line-height: 1.4;
+}
+.search-query-used strong { color: var(--mut); font-weight: 600; }
+
+.clerk-prod-banner {
+  margin: 0 0 12px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 160, 60, 0.45);
+  background: rgba(255, 160, 60, 0.1);
+  font-size: 12px;
+  line-height: 1.45;
+  color: #ffc896;
+}
+.clerk-prod-banner code { font-size: 11px; color: #ffe0c0; }
 .search-box-min {
   display: flex; gap: 8px; margin-bottom: 12px;
 }
@@ -1618,6 +1636,10 @@ footer {
   gap: 10px;
 }
 .export-progress-error p { color: var(--warn); font-size: 13px; }
+.export-progress-error-tip {
+  font-size: 12px; color: var(--dim); line-height: 1.45; margin: 8px 0 12px;
+}
+.export-progress-error-tip code { font-size: 11px; color: var(--mut); }
 .export-progress-link { font-size: 13px; color: var(--accent-2); text-align: center; }
 .export-progress-hint { font-size: 12px; color: var(--dim); text-align: center; margin-top: 8px; }
 

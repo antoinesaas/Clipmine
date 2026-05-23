@@ -5,7 +5,7 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://clipmine.fr"),
+  metadataBase: new URL("https://www.clipmine.fr"),
   title: {
     default: "ClipMine — Cinematic AI Video Enhancement",
     template: "%s · ClipMine",
@@ -20,7 +20,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "fr_FR",
-    url: "https://clipmine.fr",
+    url: "https://www.clipmine.fr",
     title: "ClipMine — Cinematic AI Video Enhancement",
     description:
       "Upscale, denoise et restore tes clips YouTube en qualité 4K cinéma. Modèles AI temporally aware.",
@@ -38,7 +38,7 @@ export const metadata: Metadata = {
     icon: [{ url: "/icon.svg", type: "image/svg+xml" }],
   },
   alternates: {
-    canonical: "https://clipmine.fr",
+    canonical: "https://www.clipmine.fr",
   },
   robots: {
     index: true,

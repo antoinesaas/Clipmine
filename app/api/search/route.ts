@@ -12,6 +12,7 @@ import {
 } from "@/lib/film-filter";
 import type { MediaType } from "@/lib/film-filter";
 import { sortByRelevance } from "@/lib/search-relevance";
+import { normalizeSearchQuery } from "@/lib/normalize-search-query";
 import { fetchTranscriptSnippet } from "@/lib/youtube-transcript";
 
 export type SearchResult = {
@@ -77,9 +78,9 @@ function mapResult(v: {
   };
 }
 
-function finalizeResults(results: SearchResult[], q: string, sort: string): SearchResult[] {
+function finalizeResults(results: SearchResult[], q: string, sort: string, rankQuery?: string): SearchResult[] {
   const filmSearch = isFilmTitleQuery(q);
-  const ranked = sortByRelevance(results, q, filmSearch);
+  const ranked = sortByRelevance(results, rankQuery ?? q, filmSearch);
   if (sort === "popular") {
     return ranked.sort((a, b) => b.views - a.views);
   }
@@ -87,10 +88,13 @@ function finalizeResults(results: SearchResult[], q: string, sort: string): Sear
 }
 
 export async function GET(req: NextRequest) {
-  const q = req.nextUrl.searchParams.get("q")?.trim();
+  const rawQ = req.nextUrl.searchParams.get("q")?.trim();
+  if (!rawQ) return NextResponse.json({ error: "missing_query" }, { status: 400 });
+
+  const { userInput, apiQuery } = normalizeSearchQuery(rawQ);
+  const q = apiQuery || rawQ;
   const typeParam = req.nextUrl.searchParams.get("type") as MediaType | "all" | null;
   const sort = req.nextUrl.searchParams.get("sort") ?? "scene";
-  if (!q) return NextResponse.json({ error: "missing_query" }, { status: 400 });
 
   const key = process.env.YOUTUBE_API_KEY;
   const directId = extractYoutubeId(q);
@@ -133,10 +137,16 @@ export async function GET(req: NextRequest) {
 
   if (key) {
     try {
-      const live = await searchLive(q, key, typeParam);
+      const live = await searchLive(q, key, typeParam, userInput || q);
       if (live?.length) {
-        const sorted = finalizeResults(live, q, sort);
-        return NextResponse.json({ results: sorted.slice(0, 16), mode: "live", sort });
+        const sorted = finalizeResults(live, q, sort, userInput || q);
+        return NextResponse.json({
+          results: sorted.slice(0, 16),
+          mode: "live",
+          sort,
+          queryUsed: q,
+          queryInput: userInput,
+        });
       }
     } catch (e) {
       console.error("[search] live fail, fallback to demo", e);
@@ -158,7 +168,7 @@ export async function GET(req: NextRequest) {
     is4K: c.is4K,
   }));
 
-  const results = finalizeResults(demo, q, sort);
+  const results = finalizeResults(demo, q, sort, userInput || q);
   const groups = groupByScene(demoClips);
 
   return NextResponse.json({
@@ -273,14 +283,15 @@ function demoToResults(q: string, typeFilter?: MediaType | "all" | null): Search
   }));
 }
 
-async function searchLive(q: string, key: string, typeFilter?: MediaType | "all" | null) {
-  const artist = isArtistQuery(q);
-  const filmSearch = isFilmTitleQuery(q);
+async function searchLive(q: string, key: string, typeFilter?: MediaType | "all" | null, rankQuery?: string) {
+  const core = (rankQuery ?? q).trim();
+  const artist = isArtistQuery(core);
+  const filmSearch = isFilmTitleQuery(core);
   const queries = artist
     ? [
-        augmentSearchQuery(q),
-        `${q.trim()} official music video`,
-        `${q.trim()} vevo 4k`,
+        augmentSearchQuery(core),
+        `${core} official music video`,
+        `${core} vevo 4k`,
       ]
     : filmSearch
       ? filmSearchQueries(q)
@@ -298,7 +309,7 @@ async function searchLive(q: string, key: string, typeFilter?: MediaType | "all"
       const batch = await searchLiveOnce(searchQ, key, {
         artist,
         filmSearch,
-        searchQ: q,
+        searchQ: rankQuery ?? q,
         typeFilter,
         videoDuration: dur,
       });

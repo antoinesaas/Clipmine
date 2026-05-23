@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import AppShell from "@/components/AppShell";
+import ClerkProductionBanner from "@/components/ClerkProductionBanner";
 
 type Me = {
   plan: string;
@@ -39,6 +40,7 @@ export default function AppLayoutClient({ children }: { children: React.ReactNod
 
   return (
     <AppShell quotaLabel={quotaLabel}>
+      <ClerkProductionBanner />
       {children}
     </AppShell>
   );

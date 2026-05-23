@@ -105,7 +105,7 @@ function ExportsContent() {
                   {e.status === "ready"
                     ? "Prêt"
                     : e.status === "processing"
-                      ? "Pipeline en cours…"
+                      ? "Export en cours…"
                       : e.status === "failed"
                         ? "Échec"
                         : "En attente"}

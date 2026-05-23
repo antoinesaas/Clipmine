@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import ClipCard from "./ClipCard";
 import { TRENDING_FILMS } from "@/lib/demo-clips";
+import { normalizeSearchQuery } from "@/lib/normalize-search-query";
 
 export type MediaType = "film" | "series";
 
@@ -55,6 +56,7 @@ export default function SearchPanel({
   const [typeFilter, setTypeFilter] = useState<TypeFilter>("all");
   const [sort, setSort] = useState<SortMode>("scene");
   const [showMoreChips, setShowMoreChips] = useState(false);
+  const [lastQueryUsed, setLastQueryUsed] = useState<string | null>(null);
 
   useEffect(() => {
     if (initialQuery.trim()) runSearch(initialQuery, typeFilter, sort);
@@ -62,16 +64,18 @@ export default function SearchPanel({
   }, [initialQuery]);
 
   async function runSearch(q?: string, type: TypeFilter = typeFilter, sortMode: SortMode = sort) {
-    const term = (q ?? query).trim();
-    if (!term) return;
-    setQuery(term);
+    const raw = (q ?? query).trim();
+    if (!raw) return;
+    const { userInput, apiQuery, augmented } = normalizeSearchQuery(raw);
+    setQuery(userInput);
+    setLastQueryUsed(augmented ? apiQuery : null);
     setLoading(true);
     setResults([]);
     setError(null);
     setDemoMode(false);
 
     try {
-      const params = new URLSearchParams({ q: term, sort: sortMode });
+      const params = new URLSearchParams({ q: apiQuery, sort: sortMode });
       if (type !== "all") params.set("type", type);
       const r = await fetch(`/api/search?${params}`);
       const data = await r.json();
@@ -107,7 +111,13 @@ export default function SearchPanel({
       <div className="search-panel-controls">
         <p className="search-hint">
           Film, série, artiste ou <strong>lien YouTube</strong> — puis export 4K.
+          <span className="search-hint-sub"> Entrée = recherche optimisée scene pack / Movieclips.</span>
         </p>
+        {lastQueryUsed && (
+          <p className="search-query-used">
+            Recherche YouTube : <strong>{lastQueryUsed}</strong>
+          </p>
+        )}
 
         <div className="search-box-min">
           <input
