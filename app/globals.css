@@ -296,8 +296,9 @@ h1 .grad {
 .chips-scroll {
   margin-top: 12px;
   margin-left: -16px; margin-right: -16px;
-  padding: 0 16px 2px;
+  padding: 0 20px 4px;
   overflow-x: auto; -webkit-overflow-scrolling: touch;
+  scroll-padding-inline: 20px;
   scrollbar-width: none;
   position: relative;
   z-index: 4;
@@ -326,6 +327,8 @@ h1 .grad {
 .hero-note {
   margin-top: 12px; font-size: 11px; color: var(--dim);
   font-family: var(--mono); line-height: 1.4;
+  text-align: center;
+  width: 100%;
 }
 
 /* === MODELS ROW (legacy) === */
@@ -1917,11 +1920,20 @@ footer {
   .trusted { padding: 32px 0 28px; }
   .wrap, .wrap-sm { padding-left: max(16px, env(safe-area-inset-left)); padding-right: max(16px, env(safe-area-inset-right)); }
   .chips-scroll {
-    margin-left: -16px; margin-right: -16px; padding: 0 16px;
-    overflow-x: auto;
+    margin-left: 0; margin-right: 0;
+    padding: 0 4px 4px;
+    overflow-x: visible;
+    scroll-padding-inline: 0;
   }
-  .chips { gap: 6px; flex-wrap: nowrap; justify-content: flex-start; }
-  .chip { font-size: 11px; padding: 7px 11px; }
+  .chips {
+    gap: 6px;
+    flex-wrap: wrap;
+    justify-content: center;
+    width: 100%;
+    min-width: 0;
+  }
+  .chip { font-size: 11px; padding: 7px 12px; }
+  .hero-note { text-align: center; }
   section { padding: 48px 0; }
   .sec-sub { margin-bottom: 28px; font-size: 14px; }
   .search-shell {

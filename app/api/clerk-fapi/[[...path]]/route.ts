@@ -99,7 +99,10 @@ async function proxyClerk(req: NextRequest, path: string[]) {
   cors.forEach((value, key) => responseHeaders.set(key, value));
 
   if (subpath.startsWith("npm/") && upstream.ok) {
-    responseHeaders.set("Cache-Control", "public, max-age=86400, must-revalidate");
+    responseHeaders.set(
+      "Cache-Control",
+      "public, max-age=86400, must-revalidate, no-transform",
+    );
   }
 
   // Corps entier (évite flux compressés tronqués sur les gros bundles clerk.browser.js)
