@@ -4,6 +4,7 @@ import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 const isProtected = createRouteMatcher(["/app(.*)", "/api/download(.*)", "/api/checkout(.*)"]);
 
 export default clerkMiddleware((auth, req) => {
+  if (req.nextUrl.pathname.startsWith("/api/clerk-fapi")) return;
   if (isProtected(req)) auth().protect();
 });
 

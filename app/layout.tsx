@@ -55,9 +55,13 @@ export const viewport: Viewport = {
   viewportFit: "cover",
 };
 
+const clerkProxyUrl =
+  process.env.NEXT_PUBLIC_CLERK_PROXY_URL ?? "https://www.clipmine.fr/api/clerk-fapi";
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <ClerkProvider
+      proxyUrl={clerkProxyUrl}
       signInUrl="/sign-in"
       signUpUrl="/sign-up"
       signInFallbackRedirectUrl="/app/search"

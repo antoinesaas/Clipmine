@@ -1,9 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
 import Link from "next/link";
 import Logo from "@/components/Logo";
+import LandingNav from "@/components/LandingNav";
 import { useRouter } from "next/navigation";
 import { TRENDING_FILMS, clipsForHero, buildHeroBgRows, DEMO_CLIPS, thumbForId } from "@/lib/demo-clips";
 import { normalizeSearchQuery } from "@/lib/normalize-search-query";
@@ -57,25 +57,7 @@ export default function Landing() {
 
   return (
     <>
-      <nav className="site-nav">
-        <div className="nav-in">
-          <Logo />
-          <div className="nav-links">
-            <a href="#models">Modèles AI</a>
-            <a href="#demos">Démos</a>
-            <a href="#pricing">Tarifs</a>
-            <SignedOut><Link href="/sign-in" className="nav-link-btn">Connexion</Link></SignedOut>
-            <SignedIn><Link href="/app/search">Mon espace</Link></SignedIn>
-          </div>
-          <SignedOut>
-            <Link href="/sign-up" className="btn btn-primary btn-nav-cta">
-              <span className="only-desktop">Essayer gratuitement</span>
-              <span className="only-mobile">Essayer</span>
-            </Link>
-          </SignedOut>
-          <SignedIn><UserButton afterSignOutUrl="/" /></SignedIn>
-        </div>
-      </nav>
+      <LandingNav />
 
       <header className="hero">
         <div className="hero-clips-zone">
