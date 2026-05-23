@@ -11,6 +11,7 @@ type Me = {
   monthlyQuota: number | null;
   bonusCredits: number;
   waitlist?: boolean;
+  pipelineReady?: boolean;
 };
 
 export function useMe() {
@@ -41,6 +42,11 @@ export default function AppLayoutClient({ children }: { children: React.ReactNod
   return (
     <AppShell quotaLabel={quotaLabel}>
       <ClerkProductionBanner />
+      {me?.waitlist && (
+        <div className="waitlist-banner" role="status">
+          Pipeline export en connexion — si le téléchargement échoue, réessaie dans 1–2 min.
+        </div>
+      )}
       {children}
     </AppShell>
   );

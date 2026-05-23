@@ -20,6 +20,8 @@ type JobStatus = {
   fileUrl?: string | null;
   errorMessage?: string | null;
   createdAt?: string | null;
+  pipelineReady?: boolean;
+  waitlist?: boolean;
 };
 
 export default function ExportProgressView({
@@ -37,8 +39,28 @@ export default function ExportProgressView({
 }) {
   const [data, setData] = useState<JobStatus | null>(null);
   const [displayPct, setDisplayPct] = useState(0);
+  const [downloading, setDownloading] = useState(false);
   const startedAtRef = useRef<number>(Date.now());
   const [, setTick] = useState(0);
+
+  async function downloadFile() {
+    setDownloading(true);
+    try {
+      const r = await fetch(`/api/download/${jobId}/file`);
+      const json = await r.json();
+      if (!r.ok || !json.fileUrl) {
+        throw new Error(json.error ?? "file_missing");
+      }
+      window.open(json.fileUrl, "_blank", "noopener,noreferrer");
+    } catch {
+      if (data?.fileUrl) {
+        window.open(data.fileUrl, "_blank", "noopener,noreferrer");
+        return;
+      }
+    } finally {
+      setDownloading(false);
+    }
+  }
 
   useEffect(() => {
     let cancelled = false;
@@ -71,6 +93,11 @@ export default function ExportProgressView({
   const stage = resolveStage(data?.status ?? "processing", data?.pipelineStage);
   const failed = stage === "failed" || data?.status === "failed";
   const ready = stage === "ready" || data?.status === "ready";
+  const stalled =
+    !ready &&
+    !failed &&
+    (data?.status === "queued" || data?.waitlist) &&
+    Date.now() - startedAtRef.current > 45_000;
   const activeTools = tools.filter((t) => t !== "stabilize");
 
   useEffect(() => {
@@ -173,19 +200,33 @@ export default function ExportProgressView({
           </div>
         )}
 
-        {ready && data?.fileUrl && (
+        {stalled && (
+          <div className="export-progress-error">
+            <p>L&apos;export met plus de temps que prévu. Le worker vidéo est peut‑être en réveil — patiente encore un peu.</p>
+            <Link href="/app/exports" className="export-progress-link">
+              Voir mes exports
+            </Link>
+          </div>
+        )}
+
+        {ready && (
           <div className="export-progress-done">
             <p>Export terminé.</p>
-            <a href={data.fileUrl} className="btn-mine" target="_blank" rel="noopener noreferrer">
-              Télécharger le clip
-            </a>
+            <button
+              type="button"
+              className="btn-mine"
+              disabled={downloading}
+              onClick={() => void downloadFile()}
+            >
+              {downloading ? "Ouverture…" : "Télécharger le clip"}
+            </button>
             <Link href="/app/exports" className="export-progress-link">
               Voir tous mes exports
             </Link>
           </div>
         )}
 
-        {!ready && !failed && (
+        {!ready && !failed && !stalled && (
           <p className="export-progress-hint">
             Tu peux quitter cette page — l&apos;export continue en arrière-plan.
           </p>

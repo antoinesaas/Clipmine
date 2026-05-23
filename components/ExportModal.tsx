@@ -177,7 +177,11 @@ export function ExportModal({
         return;
       }
       const data = await r.json();
-      if (!r.ok && r.status !== 200) {
+      if (r.status === 503) {
+        toast.error(data.message ?? "Pipeline d'export indisponible. Réessaie plus tard.");
+        return;
+      }
+      if (!r.ok) {
         toast.error(data.message ?? "Erreur export");
         return;
       }
@@ -225,7 +229,7 @@ export function ExportModal({
 
       {waitlist && (
         <div className="waitlist-inline">
-          Pipeline en activation — export en file d&apos;attente.
+          Pipeline en cours de connexion — l&apos;export peut prendre quelques minutes de plus.
         </div>
       )}
 
@@ -310,7 +314,7 @@ export function ExportModal({
         disabled={busy}
         onClick={exportClip}
       >
-        {busy ? "Traitement..." : waitlist ? "Rejoindre la file" : `Exporter en ${quality}`}
+        {busy ? "Téléchargement…" : `Télécharger · ${quality}`}
       </button>
     </ModalShell>
   );

@@ -5,6 +5,7 @@ import { checkExportEntitlement, consumeExport } from "@/lib/entitlements";
 import { hasWorker, WORKER_SECRET, WORKER_URL } from "@/lib/constants";
 import { sanitizeTools, type AiToolId } from "@/lib/video-tools";
 import { normalizeExportQuality } from "@/lib/export-quality";
+import { isPipelineReady, pipelineBlockMessage } from "@/lib/pipeline";
 import { pruneUserExports } from "@/lib/user-exports";
 
 async function dispatchToWorker(payload: {
@@ -62,13 +63,14 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "missing_youtube_id" }, { status: 400 });
   }
 
-  if (!hasDatabase) {
-    return NextResponse.json({
-      jobId: `waitlist-${Date.now()}`,
-      status: "queued",
-      mode: "waitlist",
-      message: "File d'attente — le worker vidéo sera activé dès que WORKER_URL est configuré.",
-    });
+  if (!hasDatabase || !isPipelineReady()) {
+    return NextResponse.json(
+      {
+        error: "pipeline_unavailable",
+        message: pipelineBlockMessage(),
+      },
+      { status: 503 },
+    );
   }
 
   try {
@@ -138,12 +140,10 @@ export async function POST(req: NextRequest) {
     });
   } catch (e) {
     console.error("[/api/download] error", e);
-    return NextResponse.json({
-      jobId: `error-${Date.now()}`,
-      status: "queued",
-      mode: "waitlist",
-      message: "Erreur — réessaie dans un instant.",
-    });
+    return NextResponse.json(
+      { error: "export_failed", message: "Erreur serveur — réessaie dans un instant." },
+      { status: 500 },
+    );
   }
 }
 
