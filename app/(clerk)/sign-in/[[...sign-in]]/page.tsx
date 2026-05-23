@@ -8,7 +8,6 @@ export default function SignInPage() {
         path="/sign-in"
         signUpUrl="/sign-up"
         fallbackRedirectUrl="/app/search"
-        forceRedirectUrl="/app/search"
       />
     </div>
   );

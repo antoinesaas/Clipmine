@@ -58,8 +58,34 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 24px 16px;
+  padding: max(24px, env(safe-area-inset-top, 0px)) 16px 24px;
   background: var(--bg);
+}
+/* Clerk — texte Google / labels lisibles sur fond sombre */
+.auth-page .cl-socialButtonsBlockButton,
+.auth-page .cl-socialButtonsIconButton {
+  color: #fff !important;
+  background: #16161f !important;
+  border: 1px solid rgba(255, 255, 255, 0.14) !important;
+}
+.auth-page .cl-socialButtonsBlockButton span,
+.auth-page .cl-socialButtonsBlockButtonText {
+  color: #fff !important;
+}
+.auth-page .cl-headerTitle,
+.auth-page .cl-headerSubtitle,
+.auth-page .cl-formFieldLabel,
+.auth-page .cl-footerActionText {
+  color: var(--txt) !important;
+}
+.auth-page .cl-headerSubtitle,
+.auth-page .cl-footerActionText {
+  color: var(--mut) !important;
+}
+.auth-page .cl-card {
+  width: 100%;
+  max-width: 420px;
+  margin: 0 auto;
 }
 a { color: inherit; text-decoration: none; }
 button { font-family: var(--body); cursor: pointer; }
@@ -1879,38 +1905,56 @@ footer {
   .only-mobile { display: inline; }
   .only-desktop { display: none; }
 
-  .hero {
-    min-height: 0;
-    padding-bottom: 0;
+  .auth-page {
+    align-items: flex-start;
+    padding-top: calc(64px + env(safe-area-inset-top, 0px));
   }
-  .hero-clips-zone { height: clamp(200px, 36vh, 280px); contain: layout paint; }
+  .auth-page .cl-card {
+    max-width: 100%;
+    box-shadow: none;
+    border: none;
+  }
+
+  .hero {
+    position: relative;
+    min-height: min(100dvh, 780px);
+    padding-bottom: 0;
+    padding-top: calc(52px + env(safe-area-inset-top, 0px));
+  }
+  .hero-clips-zone {
+    position: absolute;
+    inset: 0;
+    height: 100%;
+    z-index: 0;
+    contain: layout paint;
+  }
   .clip-thumb { width: 130px; height: 73px; }
   .hero-fade-clips {
     background: linear-gradient(
       180deg,
-      rgba(5, 5, 7, 0) 0%,
-      rgba(5, 5, 7, 0.2) 50%,
-      rgba(5, 5, 7, 0.88) 92%,
+      rgba(5, 5, 7, 0.82) 0%,
+      rgba(5, 5, 7, 0.45) 38%,
+      rgba(5, 5, 7, 0.72) 68%,
       var(--bg) 100%
     );
   }
   .hero-copy {
-    padding-top: 12px;
+    padding-top: 8px;
     position: relative;
-    z-index: 5;
+    z-index: 10;
   }
   .hero-search {
     padding-top: 6px;
     padding-bottom: 16px;
     background: transparent;
     position: relative;
-    z-index: 5;
+    z-index: 10;
   }
-  .hero-in { z-index: 5; }
+  .hero-in { z-index: 10; }
   .clip-bg {
     gap: 8px;
     transform: rotate(-2deg) scale(1.06);
-    opacity: 0.58;
+    opacity: 0.42;
     will-change: transform;
   }
   .clip-row.r1 { animation: scrollL 75s linear infinite; }

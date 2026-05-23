@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { PRICING, formatPrice, planBullets } from "@/lib/plans";
 
@@ -19,6 +20,7 @@ function BulletList({ plan }: { plan: "FREE" | "CREATOR" | "PRO" }) {
 }
 
 export default function BillingPage() {
+  const router = useRouter();
   const [me, setMe] = useState<{ plan: string } | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
 
@@ -49,7 +51,8 @@ export default function BillingPage() {
         return;
       }
       if (r.status === 401) {
-        toast.error("Connecte-toi pour continuer.");
+        const next = `/app/billing?checkout=${plan}`;
+        router.push(`/sign-in?redirect_url=${encodeURIComponent(next)}`);
         return;
       }
       if (!r.ok || !data.url) {

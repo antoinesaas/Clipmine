@@ -35,7 +35,7 @@ export default function CheckoutButton({
       }
       if (r.status === 401) {
         const next = redirectAfterSignIn ?? `/app/billing?checkout=${plan}`;
-        router.push(`/sign-up?redirect_url=${encodeURIComponent(next)}`);
+        router.push(`/sign-in?redirect_url=${encodeURIComponent(next)}`);
         return;
       }
       if (!r.ok || !data.url) {

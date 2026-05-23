@@ -1,5 +1,9 @@
 "use client";
 
+import DiscordIcon from "@/components/DiscordIcon";
+
+const DISCORD_URL = "https://discord.gg/Q4uBaxqDNJ";
+
 export default function GlobalError({
   error,
   reset,
@@ -14,7 +18,27 @@ export default function GlobalError({
         <p style={{ color: "#a1a1aa", marginBottom: 20 }}>
           Une erreur a bloqué l&apos;affichage. Tu peux réessayer ou revenir à l&apos;accueil.
         </p>
-        <div style={{ display: "flex", gap: 12 }}>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 12 }}>
+          <a
+            href={DISCORD_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 8,
+              background: "#5865F2",
+              color: "#fff",
+              border: "none",
+              borderRadius: 10,
+              padding: "12px 18px",
+              fontWeight: 600,
+              textDecoration: "none",
+            }}
+          >
+            <DiscordIcon size={18} />
+            Discord
+          </a>
           <button
             type="button"
             onClick={() => reset()}

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth, currentUser } from "@clerk/nextjs/server";
+import { appBaseUrl } from "@/lib/app-url";
 import { stripe, hasStripe, PRICES } from "@/lib/stripe";
 import { prisma, hasDatabase } from "@/lib/prisma";
 
@@ -18,12 +19,16 @@ export async function POST(req: NextRequest) {
   const { plan } = await req.json();
   const priceId = PRICES[plan as keyof typeof PRICES];
   if (!priceId) {
+    const missingEnv =
+      plan === "CREATOR"
+        ? "STRIPE_PRICE_CREATOR"
+        : plan === "PRO"
+          ? "STRIPE_PRICE_PRO"
+          : "STRIPE_PRICE_CREDITS_10";
     return NextResponse.json({
       error: "invalid_plan",
-      message: plan === "PRO"
-        ? "Tarif Pro indisponible. Contacte le support."
-        : "Plan invalide.",
-    }, { status: 400 });
+      message: `Paiement indisponible (${missingEnv} manquant sur Vercel).`,
+    }, { status: 503 });
   }
 
   try {
@@ -41,7 +46,7 @@ export async function POST(req: NextRequest) {
       user = await prisma.user.update({ where: { id: user.id }, data: { stripeCustomerId: customer.id } });
     }
 
-    const base = process.env.NEXT_PUBLIC_APP_URL ?? new URL(req.url).origin;
+    const base = appBaseUrl(new URL(req.url).origin);
     const isCredits = plan === "CREDITS_10";
     const session = await stripe.checkout.sessions.create({
       customer: user.stripeCustomerId!,

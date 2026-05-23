@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { prisma, hasDatabase } from "@/lib/prisma";
+import { appBaseUrl } from "@/lib/app-url";
 import { hasStripe, stripe } from "@/lib/stripe";
 
 export async function POST() {
@@ -27,12 +28,11 @@ export async function POST() {
       });
     }
 
-    const origin =
-      process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") ?? "https://www.clipmine.fr";
+    const base = appBaseUrl();
 
     const session = await stripe.billingPortal.sessions.create({
       customer: customerId,
-      return_url: `${origin}/app/billing`,
+      return_url: `${base}/app/billing`,
     });
 
     return NextResponse.json({ url: session.url });
