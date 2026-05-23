@@ -1867,6 +1867,11 @@ footer {
 }
 
 /* === MOBILE tweaks (≤640px) === */
+@media (max-width: 640px) and (prefers-reduced-motion: reduce) {
+  .clip-row { animation: none !important; }
+  .clip-bg { transform: none !important; opacity: 0.5; }
+}
+
 @media (max-width: 640px) {
   .only-mobile { display: inline; }
   .only-desktop { display: none; }
@@ -1875,8 +1880,7 @@ footer {
     min-height: 0;
     padding-bottom: 0;
   }
-  .hero-clips-zone { height: clamp(200px, 36vh, 280px); }
-  .clip-bg { opacity: 0.68; transform: rotate(-2deg) scale(1.08); gap: 8px; }
+  .hero-clips-zone { height: clamp(200px, 36vh, 280px); contain: layout paint; }
   .clip-thumb { width: 130px; height: 73px; }
   .hero-fade-clips {
     background: linear-gradient(
@@ -1900,9 +1904,15 @@ footer {
     z-index: 5;
   }
   .hero-in { z-index: 5; }
-  /* Animations lourdes → écran noir sur certains mobiles */
-  .clip-row { animation: none !important; transform: none !important; }
-  .clip-bg { transform: none !important; opacity: 0.45; }
+  .clip-bg {
+    gap: 8px;
+    transform: rotate(-2deg) scale(1.06);
+    opacity: 0.58;
+    will-change: transform;
+  }
+  .clip-row.r1 { animation: scrollL 75s linear infinite; }
+  .clip-row.r2 { animation: scrollR 95s linear infinite; }
+  .clip-row.r3 { animation: scrollL 115s linear infinite; }
   .trusted-logos { gap: 16px; padding: 0 8px; justify-content: center; }
   .trusted { padding: 32px 0 28px; }
   .wrap, .wrap-sm { padding-left: max(16px, env(safe-area-inset-left)); padding-right: max(16px, env(safe-area-inset-right)); }

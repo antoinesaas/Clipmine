@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { CLERK_PROXY_URL } from "@/lib/clerk-config";
+import { CLERK_PROXY_PUBLIC, CLERK_PROXY_REGISTERED } from "@/lib/clerk-config";
 
 const CLERK_FAPI = "https://frontend-api.clerk.dev";
 
@@ -25,13 +25,29 @@ function corsHeaders(req: NextRequest): Headers {
   return h;
 }
 
-function proxyUrlFromRequest(req: NextRequest): string {
-  const host = req.headers.get("x-forwarded-host") ?? req.headers.get("host") ?? "";
-  if (host.startsWith("www.")) {
-    const proto = req.headers.get("x-forwarded-proto") ?? "https";
-    return `${proto}://${host}/api/clerk-fapi`;
+/** Réécrit les URLs Clerk vers le proxy www visible par le navigateur. */
+function rewriteProxyUrls(value: string): string {
+  return value
+    .replaceAll("https://frontend-api.clerk.dev", CLERK_PROXY_REGISTERED)
+    .replaceAll(CLERK_PROXY_REGISTERED, CLERK_PROXY_PUBLIC)
+    .replaceAll("https://clerk.clipmine.fr", CLERK_PROXY_PUBLIC);
+}
+
+function rewriteResponseHeaders(headers: Headers): void {
+  const location = headers.get("location");
+  if (location) headers.set("location", rewriteProxyUrls(location));
+
+  // Plusieurs Set-Cookie possibles
+  const cookies = headers.getSetCookie?.() ?? [];
+  if (cookies.length > 0) {
+    headers.delete("set-cookie");
+    for (const cookie of cookies) {
+      headers.append("set-cookie", rewriteProxyUrls(cookie));
+    }
+  } else {
+    const single = headers.get("set-cookie");
+    if (single) headers.set("set-cookie", rewriteProxyUrls(single));
   }
-  return CLERK_PROXY_URL;
 }
 
 async function proxyClerk(req: NextRequest, path: string[]) {
@@ -42,15 +58,16 @@ async function proxyClerk(req: NextRequest, path: string[]) {
 
   const subpath = path.join("/");
   const target = `${CLERK_FAPI}/${subpath}${req.nextUrl.search}`;
-  const proxyUrl = proxyUrlFromRequest(req);
 
   const headers = new Headers();
   req.headers.forEach((value, key) => {
     const lower = key.toLowerCase();
     if (lower === "host" || lower === "connection" || lower === "content-length") return;
+    if (lower === "clerk-proxy-url") return;
     headers.set(key, value);
   });
-  headers.set("Clerk-Proxy-Url", proxyUrl);
+  // Doit correspondre exactement au proxy_url du dashboard Clerk
+  headers.set("Clerk-Proxy-Url", CLERK_PROXY_REGISTERED);
   headers.set("Clerk-Secret-Key", secret);
   headers.set(
     "X-Forwarded-For",
@@ -71,6 +88,7 @@ async function proxyClerk(req: NextRequest, path: string[]) {
   const upstream = await fetch(target, init);
   const responseHeaders = new Headers(upstream.headers);
   responseHeaders.delete("content-encoding");
+  rewriteResponseHeaders(responseHeaders);
 
   const cors = corsHeaders(req);
   cors.forEach((value, key) => responseHeaders.set(key, value));
