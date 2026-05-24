@@ -11,6 +11,11 @@ export default function ClerkRootLayout({ children }: { children: React.ReactNod
       signUpUrl="/sign-up"
       signInFallbackRedirectUrl="/app/search"
       signUpFallbackRedirectUrl="/app/search"
+      allowedRedirectOrigins={[
+        "https://www.clipmine.fr",
+        "https://clipmine.fr",
+        "http://localhost:3000",
+      ]}
       appearance={CLERK_APPEARANCE}
     >
       {children}

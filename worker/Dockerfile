@@ -9,7 +9,7 @@ WORKDIR /app
 COPY package.json ./
 RUN npm install --omit=dev
 
-COPY index.ts pipeline.ts ytdlp.ts ./
+COPY index.ts pipeline.ts ytdlp.ts stream-fallback.ts ./
 COPY prisma ./prisma
 RUN npx prisma generate
 

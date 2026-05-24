@@ -2,6 +2,7 @@ import { execFile } from "child_process";
 import { promisify } from "util";
 import { access, mkdir, readdir, rename, writeFile } from "fs/promises";
 import path from "path";
+import { downloadViaStreamFallback } from "./stream-fallback.js";
 
 const exec = promisify(execFile);
 
@@ -26,7 +27,12 @@ async function ensureCookiesFile(): Promise<string | null> {
   if (b64) {
     try {
       await mkdir(TMP, { recursive: true });
-      await writeFile(COOKIES_PATH, Buffer.from(b64, "base64"));
+      const raw = Buffer.from(b64, "base64").toString("utf8");
+      if (!raw.includes("youtube.com") && !raw.includes("youtu.be")) {
+        console.warn("[ytdlp] cookies invalid: missing youtube domain");
+        return null;
+      }
+      await writeFile(COOKIES_PATH, raw, "utf8");
       return COOKIES_PATH;
     } catch {
       /* ignore */
@@ -42,6 +48,12 @@ function outputTemplate(finalPath: string): string {
   const dir = path.dirname(finalPath);
   const base = path.basename(finalPath, path.extname(finalPath));
   return path.join(dir, `${base}.%(ext)s`);
+}
+
+function poTokenArgs(): string[] {
+  const token = process.env.YOUTUBE_PO_TOKEN?.trim();
+  if (!token) return [];
+  return ["--extractor-args", `youtube:po_token=${token}`];
 }
 
 function baseArgs(outputTemplatePath: string, url: string, cookies: string | null): string[] {
@@ -71,6 +83,7 @@ function baseArgs(outputTemplatePath: string, url: string, cookies: string | nul
     outputTemplatePath,
   ];
   if (cookies) args.push("--cookies", cookies);
+  args.push(...poTokenArgs());
   args.push(url);
   return args;
 }
@@ -187,12 +200,21 @@ export async function downloadYoutubeMp4(youtubeId: string, outputPath: string) 
   }
 
   const joined = errors.join(" | ");
+  console.warn("[ytdlp] all strategies failed, trying Piped/Invidious", youtubeId);
+
+  try {
+    const maxSec = Number(process.env.MAX_CLIP_SEC ?? 180);
+    await downloadViaStreamFallback(youtubeId, outputPath, maxSec > 0 ? maxSec : undefined);
+    return;
+  } catch (fallbackErr) {
+    const fbMsg = fallbackErr instanceof Error ? fallbackErr.message : String(fallbackErr);
+    errors.push(`fallback: ${fbMsg.slice(0, 160)}`);
+  }
+
   const botBlock = /bot|sign in|confirm|not a bot|login required/i.test(joined);
   throw new Error(
     botBlock
-      ? cookies
-        ? "YouTube bloque ce clip. Essaie un clip Movieclips / scene pack ou colle un lien YouTube direct."
-        : "YouTube bloque le téléchargement : configure YT_COOKIES_BASE64 sur Fly."
+      ? "Impossible de récupérer ce clip (YouTube + repli). Essaie un autre lien ou une vidéo Movieclips."
       : "Téléchargement impossible (vidéo privée, région ou réseau).",
   );
 }
