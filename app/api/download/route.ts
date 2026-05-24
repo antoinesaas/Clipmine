@@ -8,6 +8,7 @@ import { sanitizeTools, type AiToolId } from "@/lib/video-tools";
 import { normalizeExportQuality } from "@/lib/export-quality";
 import { isPipelineReady, pipelineBlockMessage } from "@/lib/pipeline";
 import { pruneUserExports } from "@/lib/user-exports";
+import { extractYouTubeStreams } from "@/lib/youtube-innertube";
 
 async function dispatchToWorker(payload: {
   jobId: string;
@@ -17,6 +18,8 @@ async function dispatchToWorker(payload: {
   quality: string;
   enhance: boolean;
   tools: AiToolId[];
+  videoUrl?: string;
+  audioUrl?: string;
 }): Promise<{ ok: boolean; error?: string }> {
   if (!hasWorker()) return { ok: false, error: "worker_not_configured" };
   const secret = WORKER_SECRET.trim();
@@ -107,6 +110,26 @@ export async function POST(req: NextRequest) {
       },
     });
 
+    // Pré-extraction des URLs stream depuis Vercel (IP résidentielle/anycast).
+    // Le worker Fly.io (datacenter) télécharge ensuite depuis le CDN googlevideo.com
+    // qui accepte n'importe quelle IP — contourne le blocage YouTube sur Fly.io.
+    let videoUrl: string | undefined;
+    let audioUrl: string | undefined;
+    if (hasWorker()) {
+      try {
+        const streams = await extractYouTubeStreams(ytId);
+        if (streams) {
+          videoUrl = streams.videoUrl;
+          audioUrl = streams.audioUrl;
+          console.log("[/api/download] innertube ok", ytId, audioUrl ? "adaptive" : "muxed");
+        } else {
+          console.warn("[/api/download] innertube returned null, worker will fallback to yt-dlp", ytId);
+        }
+      } catch (e) {
+        console.warn("[/api/download] innertube error, worker will fallback to yt-dlp", ytId, e);
+      }
+    }
+
     let dispatchError: string | undefined;
     if (hasWorker()) {
       const dispatched = await dispatchToWorker({
@@ -117,6 +140,8 @@ export async function POST(req: NextRequest) {
         quality: exportQuality,
         enhance: wantsEnhance,
         tools,
+        videoUrl,
+        audioUrl,
       });
       if (!dispatched.ok) {
         dispatchError = dispatched.error;

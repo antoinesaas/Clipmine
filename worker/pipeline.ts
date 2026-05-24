@@ -54,7 +54,6 @@ export function buildVideoFilters(input: PipelineInput): string {
 
   if (ratio === "9:16") {
     f.push("crop='min(iw,ih*9/16)':ih:(iw-min(iw,ih*9/16))/2:0");
-    f.push(`scale=${w}:${h}:flags=lanczos`);
   } else if (ratio === "4:3") {
     f.push("crop='min(iw,ih*4/3)':ih:(iw-min(iw,ih*4/3))/2:0");
   } else {
@@ -104,9 +103,9 @@ export function buildFfmpegArgs(
   if (maxSec && maxSec > 0) args.push("-t", String(maxSec));
   args.push("-vf", vf, "-c:v", "libx264", "-preset", "fast", "-crf", "18", "-pix_fmt", "yuv420p");
 
-  if (tools.includes("slowmo")) {
-    args.push("-filter:a", "atempo=0.5");
-  }
+  // slowmo : ralentir aussi l'audio pour garder la synchro
+  const audioFilter = tools.includes("slowmo") ? "atempo=0.5" : "anull";
+  args.push("-filter:a", audioFilter);
   args.push("-c:a", "aac", "-b:a", "192k", "-movflags", "+faststart", outputPath);
   return args;
 }
@@ -133,8 +132,9 @@ export function buildFallbackFilterChains(input: PipelineInput): string[] {
 
   const full = `${crop}${scale}${denoise}${enhance}${motion}`.replace(/^,/, "");
   const medium = `${crop}${scale}${denoise}${enhance}`.replace(/^,/, "");
-  const minimal = `${crop}${scale || `scale=${w}:${h}`}`.replace(/^,/, "");
+  const minimal = `${crop}${scale || `,scale=${w}:${h}`}`.replace(/^,/, "");
 
+  // Pour chaque chain, on note si elle contient slowmo pour corriger l'audio côté appelant
   return [full, medium, minimal].filter(Boolean);
 }
 

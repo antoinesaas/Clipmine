@@ -1,8 +1,9 @@
 FROM node:20-bookworm
 
-RUN apt-get update && apt-get install -y ffmpeg python3 python3-pip openssl curl unzip \
-  && pip3 install --break-system-packages -U "yt-dlp[default]" \
-  && pip3 install --break-system-packages -U "git+https://github.com/yt-dlp/yt-dlp.git@master" \
+RUN apt-get update && apt-get install -y ffmpeg openssl curl unzip \
+  && curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp_linux \
+     -o /usr/local/bin/yt-dlp \
+  && chmod a+rx /usr/local/bin/yt-dlp \
   && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
@@ -10,7 +11,7 @@ WORKDIR /app
 COPY package.json ./
 RUN npm install --omit=dev
 
-COPY index.ts pipeline.ts ytdlp.ts stream-fallback.ts cobalt-download.ts download-youtube.ts ./
+COPY index.ts pipeline.ts ytdlp.ts stream-fallback.ts cobalt-download.ts download-youtube.ts download-direct.ts ./
 COPY prisma ./prisma
 RUN npx prisma generate
 

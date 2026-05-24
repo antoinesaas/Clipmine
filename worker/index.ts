@@ -17,6 +17,7 @@ import {
   type PipelineInput,
 } from "./pipeline.js";
 import { downloadYoutubeMp4 } from "./download-youtube.js";
+import { downloadFromUrls } from "./download-direct.js";
 import { hasYoutubeCookies } from "./ytdlp.js";
 
 const exec = promisify(execFile);
@@ -138,7 +139,16 @@ app.get("/health", (_req, res) => {
 });
 
 app.post("/process", auth, async (req, res) => {
-  const { jobId, youtubeId, ratio = "9:16", quality = "4K", enhance = true, tools: rawTools } = req.body ?? {};
+  const {
+    jobId,
+    youtubeId,
+    ratio = "9:16",
+    quality = "4K",
+    enhance = true,
+    tools: rawTools,
+    videoUrl,
+    audioUrl,
+  } = req.body ?? {};
   if (!jobId || !youtubeId) {
     res.status(400).json({ error: "missing_fields" });
     return;
@@ -156,10 +166,24 @@ app.post("/process", auth, async (req, res) => {
       const rawMp4 = path.join(workDir, "raw.mp4");
       const out = path.join(workDir, "export.mp4");
 
-      console.log("[worker] start", jobId, { ratio, quality, tools });
+      console.log("[worker] start", jobId, { ratio, quality, tools, hasDirectUrls: Boolean(videoUrl) });
       await setStatus(jobId, "processing", { pipelineStage: "download" });
 
-      await downloadYoutubeMp4(youtubeId, rawMp4);
+      if (videoUrl) {
+        // URLs CDN pré-extraites par Vercel — téléchargement direct, pas de blocage IP
+        console.log("[worker] direct CDN download", youtubeId, audioUrl ? "adaptive" : "muxed");
+        try {
+          await downloadFromUrls(videoUrl, audioUrl, rawMp4, MAX_CLIP_SEC);
+          console.log("[worker] direct download ok", youtubeId);
+        } catch (directErr) {
+          // CDN URL expirée ou inaccessible → fallback yt-dlp
+          console.warn("[worker] direct download failed, fallback yt-dlp", youtubeId, (directErr as Error).message?.slice(0, 200));
+          await downloadYoutubeMp4(youtubeId, rawMp4);
+        }
+      } else {
+        // Pas d'URL pré-extraite → yt-dlp (peut échouer sur datacenter pour contenu protégé)
+        await downloadYoutubeMp4(youtubeId, rawMp4);
+      }
 
       await setStatus(jobId, "processing", { pipelineStage: "ffmpeg" });
       await runFfmpegWithFallbacks(rawMp4, out, pipeline, MAX_CLIP_SEC);

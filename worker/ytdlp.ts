@@ -55,11 +55,18 @@ function poTokenArgs(): string[] {
   return ["--extractor-args", `youtube:po_token=${token}`];
 }
 
+function proxyArgs(): string[] {
+  const proxy = process.env.YTDLP_PROXY?.trim();
+  if (!proxy) return [];
+  return ["--proxy", proxy];
+}
+
 function baseArgs(outputTemplatePath: string, url: string, cookies: string | null): string[] {
   const args = [
     "--user-agent",
     USER_AGENT,
     "--geo-bypass",
+    "--force-ipv4",
     "--extractor-retries",
     "4",
     "--retries",
@@ -81,8 +88,10 @@ function baseArgs(outputTemplatePath: string, url: string, cookies: string | nul
     "-o",
     outputTemplatePath,
   ];
+  args.push("--no-check-formats");
   if (cookies) args.push("--cookies", cookies);
   args.push(...poTokenArgs());
+  args.push(...proxyArgs());
   args.push(url);
   return args;
 }
@@ -91,37 +100,15 @@ type Strategy = { label: string; extra: string[]; format: string[] };
 
 const STRATEGIES: Strategy[] = [
   {
+    // Format le plus permissif possible — aucune restriction de hauteur
     label: "best_any",
     extra: [],
-    format: ["-f", "b/bv*+ba/best"],
-  },
-  {
-    label: "simple_mp4",
-    extra: [],
-    format: ["-f", "best[ext=mp4][height<=1080]/best[height<=1080][ext=mp4]/best[height<=1080]"],
+    format: ["-f", "bv*+ba/b/best"],
   },
   {
     label: "android_sdkless",
     extra: ["--extractor-args", "youtube:player_client=android_sdkless,web"],
-    format: ["-f", "best[height<=1080]/best"],
-  },
-  {
-    label: "android+web",
-    extra: [
-      "--extractor-args",
-      "youtube:player_client=android,web,web_embedded;player_skip=webpage,configs",
-    ],
-    format: ["-f", "bv*[height<=1080]+ba/b[height<=1080]/best"],
-  },
-  {
-    label: "android_creator",
-    extra: ["--extractor-args", "youtube:player_client=android_creator,android"],
-    format: ["-f", "best[height<=1080]/best"],
-  },
-  {
-    label: "tv_embedded",
-    extra: ["--extractor-args", "youtube:player_client=tv_embedded,web"],
-    format: ["-f", "best[height<=1080]/best"],
+    format: ["-f", "bv*+ba/best"],
   },
   {
     label: "ios",
@@ -129,14 +116,43 @@ const STRATEGIES: Strategy[] = [
     format: ["-f", "best[ext=mp4]/best"],
   },
   {
-    label: "mweb",
-    extra: ["--extractor-args", "youtube:player_client=mweb"],
-    format: ["-f", "best[height<=720]/best"],
+    label: "tv_embedded",
+    extra: ["--extractor-args", "youtube:player_client=tv_embedded,web"],
+    format: ["-f", "bv*+ba/best"],
   },
   {
-    label: "fallback_any",
-    extra: ["--extractor-args", "youtube:player_client=android"],
-    format: ["-f", "bestvideo[height<=1080]+bestaudio/best"],
+    label: "android+web",
+    extra: [
+      "--extractor-args",
+      "youtube:player_client=android,web,web_embedded;player_skip=webpage,configs",
+    ],
+    format: ["-f", "bv*+ba/b/best"],
+  },
+  {
+    label: "android_creator",
+    extra: ["--extractor-args", "youtube:player_client=android_creator,android"],
+    format: ["-f", "bv*+ba/best"],
+  },
+  {
+    label: "mweb",
+    extra: ["--extractor-args", "youtube:player_client=mweb"],
+    format: ["-f", "best"],
+  },
+  {
+    label: "web_creator",
+    extra: ["--extractor-args", "youtube:player_client=web_creator,web"],
+    format: ["-f", "bv*+ba/best"],
+  },
+  {
+    label: "mediaconnect",
+    extra: ["--extractor-args", "youtube:player_client=mediaconnect"],
+    format: ["-f", "best"],
+  },
+  {
+    // Dernier recours : n'importe quel format disponible, aucune restriction
+    label: "last_resort",
+    extra: ["--extractor-args", "youtube:player_client=android,ios,tv_embedded"],
+    format: ["-f", "worst/best"],
   },
 ];
 

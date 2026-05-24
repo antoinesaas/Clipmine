@@ -9,21 +9,24 @@ const USER_AGENT =
 
 /** Instances Piped / Invidious publiques (repli si yt-dlp bloqué par YouTube). */
 const PIPED_BASES = [
-  "https://pipedapi.kavin.rocks",
   "https://pipedapi.adminforge.de",
   "https://api.piped.yt",
   "https://pipedapi.in.projectsegfau.lt",
+  "https://piped-api.garudalinux.org",
+  "https://pipedapi.kavin.rocks",
   "https://pipedapi.tokhmi.xyz",
   "https://pipedapi.moomoo.me",
 ];
 
 const INVIDIOUS_BASES = [
-  "https://invidious.fdn.fr",
-  "https://invidious.privacyredirect.com",
-  "https://yt.artemislena.eu",
   "https://inv.nadeko.net",
-  "https://invidious.protokolla.fi",
   "https://yewtu.be",
+  "https://invidious.privacyredirect.com",
+  "https://invidious.fdn.fr",
+  "https://yt.artemislena.eu",
+  "https://invidious.protokolla.fi",
+  "https://invidious.perennialte.ch",
+  "https://inv.riverside.rocks",
 ];
 
 type StreamPick = { videoUrl: string; audioUrl?: string; label: string };
