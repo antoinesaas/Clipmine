@@ -75,23 +75,24 @@ export default function Landing() {
             ))}
           </div>
           <div className="hero-fade-clips" aria-hidden />
+          <div className="hero-overlay">
+            <div className="hero-in wrap hero-copy">
+              <div className="badge">
+                <span className="pulse" />FILMS · SÉRIES · SPORT · ANIMÉ
+              </div>
+              <h1>
+                Trouve ta scène.<br />
+                <span className="grad">Exporte en 9:16 · 4K.</span>
+              </h1>
+              <p className="sub">
+                Films & séries pour éditeurs TikTok.
+                Colle un lien YouTube ou cherche une scène — export 9:16 en 4K.
+              </p>
+            </div>
+          </div>
         </div>
 
-        <div className="hero-front">
-          <div className="hero-in wrap hero-copy">
-            <div className="badge">
-              <span className="pulse" />FILMS · SÉRIES · SPORT · ANIMÉ
-            </div>
-            <h1>
-              Trouve ta scène.<br />
-              <span className="grad">Exporte en 9:16 · 4K.</span>
-            </h1>
-            <p className="sub">
-              Films & séries pour éditeurs TikTok.
-              Colle un lien YouTube ou cherche une scène — export 9:16 en 4K.
-            </p>
-          </div>
-
+        <div className="hero-search-wrap">
           <div className="hero-search wrap">
             <div className="search-box">
             <div className="search-shell">
@@ -144,7 +145,6 @@ export default function Landing() {
           </div>
           </div>
         </div>
-
       </header>
 
       {/* TRUSTED BY */}

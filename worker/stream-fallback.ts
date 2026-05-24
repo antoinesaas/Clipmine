@@ -12,12 +12,18 @@ const PIPED_BASES = [
   "https://pipedapi.kavin.rocks",
   "https://pipedapi.adminforge.de",
   "https://api.piped.yt",
+  "https://pipedapi.in.projectsegfau.lt",
+  "https://pipedapi.tokhmi.xyz",
+  "https://pipedapi.moomoo.me",
 ];
 
 const INVIDIOUS_BASES = [
   "https://invidious.fdn.fr",
   "https://invidious.privacyredirect.com",
   "https://yt.artemislena.eu",
+  "https://inv.nadeko.net",
+  "https://invidious.protokolla.fi",
+  "https://yewtu.be",
 ];
 
 type StreamPick = { videoUrl: string; audioUrl?: string; label: string };
@@ -124,11 +130,14 @@ async function ffmpegFetch(
 ): Promise<void> {
   const t = maxSec && maxSec > 0 ? ["-t", String(maxSec)] : [];
 
+  const ua = ["-user_agent", USER_AGENT];
+
   if (pick.audioUrl) {
     await exec(
       "ffmpeg",
       [
         "-y",
+        ...ua,
         ...t,
         "-i",
         pick.videoUrl,
@@ -162,6 +171,7 @@ async function ffmpegFetch(
     "ffmpeg",
     [
       "-y",
+      ...ua,
       ...t,
       "-i",
       pick.videoUrl,

@@ -16,7 +16,8 @@ import {
   normalizeTools,
   type PipelineInput,
 } from "./pipeline.js";
-import { downloadYoutubeMp4, hasYoutubeCookies } from "./ytdlp.js";
+import { downloadYoutubeMp4 } from "./download-youtube.js";
+import { hasYoutubeCookies } from "./ytdlp.js";
 
 const exec = promisify(execFile);
 const app = express();

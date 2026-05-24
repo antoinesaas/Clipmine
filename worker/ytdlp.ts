@@ -2,7 +2,6 @@ import { execFile } from "child_process";
 import { promisify } from "util";
 import { access, mkdir, readdir, rename, writeFile } from "fs/promises";
 import path from "path";
-import { downloadViaStreamFallback } from "./stream-fallback.js";
 
 const exec = promisify(execFile);
 
@@ -174,8 +173,8 @@ async function resolveDownloadedFile(dir: string, targetPath: string): Promise<s
   return targetPath;
 }
 
-/** Téléchargement YouTube — multi-clients ; cookies Fly recommandés. */
-export async function downloadYoutubeMp4(youtubeId: string, outputPath: string) {
+/** Téléchargement YouTube via yt-dlp (utilisé en dernier recours). */
+export async function downloadYoutubeYtdlp(youtubeId: string, outputPath: string) {
   const url = `https://www.youtube.com/watch?v=${youtubeId}`;
   const cookies = await ensureCookiesFile();
   const errors: string[] = [];
@@ -200,21 +199,10 @@ export async function downloadYoutubeMp4(youtubeId: string, outputPath: string) 
   }
 
   const joined = errors.join(" | ");
-  console.warn("[ytdlp] all strategies failed, trying Piped/Invidious", youtubeId);
-
-  try {
-    const maxSec = Number(process.env.MAX_CLIP_SEC ?? 180);
-    await downloadViaStreamFallback(youtubeId, outputPath, maxSec > 0 ? maxSec : undefined);
-    return;
-  } catch (fallbackErr) {
-    const fbMsg = fallbackErr instanceof Error ? fallbackErr.message : String(fallbackErr);
-    errors.push(`fallback: ${fbMsg.slice(0, 160)}`);
-  }
-
   const botBlock = /bot|sign in|confirm|not a bot|login required/i.test(joined);
   throw new Error(
     botBlock
-      ? "Impossible de récupérer ce clip (YouTube + repli). Essaie un autre lien ou une vidéo Movieclips."
-      : "Téléchargement impossible (vidéo privée, région ou réseau).",
+      ? "YouTube bloque yt-dlp sur ce clip."
+      : "yt-dlp : téléchargement impossible.",
   );
 }

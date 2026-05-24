@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 
+const REDIRECT_URI = "https://clipmine.fr/api/clerk-fapi/v1/oauth_callback";
+
 type Status = {
   ok: boolean;
   misconfigured?: boolean;
@@ -18,30 +20,35 @@ export default function GoogleAuthNotice() {
       .catch(() => {});
   }, []);
 
-  if (!status?.misconfigured && status?.ok !== false) return null;
-  if (status?.ok) return null;
+  if (!status || status.ok) return null;
 
   return (
-    <div
-      className="google-auth-notice"
-      role="alert"
-      style={{
-        maxWidth: 420,
-        margin: "0 auto 16px",
-        padding: "12px 14px",
-        borderRadius: 10,
-        background: "rgba(255, 80, 80, 0.12)",
-        border: "1px solid rgba(255, 80, 80, 0.35)",
-        color: "#f8d0d0",
-        fontSize: 13,
-        lineHeight: 1.45,
-        textAlign: "left",
-      }}
-    >
-      <strong>Connexion Google indisponible</strong>
-      <p style={{ margin: "8px 0 0" }}>
-        {status.fix ??
-          "Le Client ID Google dans Clerk est invalide. Un admin doit le corriger dans le dashboard Clerk + Google Cloud."}
+    <div className="google-auth-notice" role="alert">
+      <strong>Google : « invalid client ID »</strong>
+      <p>
+        Le Client ID dans Clerk est faux (souvent une URL collée à la place). Corrige en 3 minutes :
+      </p>
+      <ol>
+        <li>
+          <a href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noreferrer">
+            Google Cloud → Credentials
+          </a>{" "}
+          → OAuth Web → copie le <strong>Client ID</strong> (finit par{" "}
+          <code>.apps.googleusercontent.com</code>)
+        </li>
+        <li>
+          Redirect URI dans Google :{" "}
+          <code style={{ wordBreak: "break-all" }}>{REDIRECT_URI}</code>
+        </li>
+        <li>
+          <a href="https://dashboard.clerk.com" target="_blank" rel="noreferrer">
+            Clerk Production
+          </a>{" "}
+          → Social → Google → colle Client ID + Secret (pas l&apos;URL de callback)
+        </li>
+      </ol>
+      <p className="google-auth-notice-hint">
+        En attendant : connecte-toi par <strong>email</strong> (lien magique ou mot de passe).
       </p>
     </div>
   );
