@@ -67,7 +67,7 @@ export default function SearchPanel({
   async function runSearch(q?: string, type: TypeFilter = typeFilter, sortMode: SortMode = sort) {
     const raw = (q ?? query).trim();
     if (!raw) return;
-    const { userInput, apiQuery, augmented } = normalizeSearchQuery(raw);
+    const { userInput, apiQuery, augmented } = normalizeSearchQuery(raw, type);
     setQuery(userInput);
     setLastQueryUsed(augmented ? apiQuery : null);
     setLoading(true);
@@ -112,7 +112,7 @@ export default function SearchPanel({
       <div className="search-panel-controls">
         <p className="search-hint">
           Film, série, artiste ou <strong>lien YouTube</strong> — puis export 4K.
-          <span className="search-hint-sub"> Entrée = recherche optimisée scene pack / Movieclips.</span>
+          <span className="search-hint-sub"> Entrée = scene pack (films) ou clip for edits (artistes).</span>
         </p>
         {lastQueryUsed && (
           <p className="search-query-used">

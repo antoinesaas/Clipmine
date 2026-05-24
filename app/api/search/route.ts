@@ -7,6 +7,9 @@ import {
   isArtistQuery,
   isFilmTitleQuery,
   filmSearchQueries,
+  personSearchQueries,
+  sportSearchQueries,
+  SPORT_HINTS,
   extractMovieTitle,
   parseDurationSeconds,
 } from "@/lib/film-filter";
@@ -52,13 +55,13 @@ function mapResult(v: {
   snippet: { title: string; channelTitle: string; description?: string; thumbnails?: { maxres?: { url: string }; high?: { url: string } }; publishedAt?: string };
   statistics?: { viewCount?: string };
   contentDetails?: { duration?: string; definition?: string };
-}, extra?: { direct?: boolean; transcript?: string }) {
+}, extra?: { direct?: boolean; transcript?: string; rankQuery?: string }) {
   const title = v.snippet.title;
   const channel = v.snippet.channelTitle;
   const views = Number(v.statistics?.viewCount ?? 0);
   const ageDays = Math.max(1, (Date.now() - new Date(v.snippet.publishedAt ?? Date.now()).getTime()) / 864e5);
   const viralScore = Math.min(100, Math.round(Math.log10(views / ageDays + 1) * 14));
-  const type = inferMediaType(title, channel);
+  const type = inferMediaType(title, channel, extra?.rankQuery ?? "");
   const movie = extractMovieTitle(title);
   const is4K = /4k|2160|uhd/i.test(title) || v.contentDetails?.definition === "hd";
   return {
@@ -91,9 +94,9 @@ export async function GET(req: NextRequest) {
   const rawQ = req.nextUrl.searchParams.get("q")?.trim();
   if (!rawQ) return NextResponse.json({ error: "missing_query" }, { status: 400 });
 
-  const { userInput, apiQuery } = normalizeSearchQuery(rawQ);
-  const q = apiQuery || rawQ;
   const typeParam = req.nextUrl.searchParams.get("type") as MediaType | "all" | null;
+  const { userInput, apiQuery } = normalizeSearchQuery(rawQ, typeParam ?? "all");
+  const q = apiQuery || rawQ;
   const sort = req.nextUrl.searchParams.get("sort") ?? "scene";
 
   const key = process.env.YOUTUBE_API_KEY;
@@ -139,9 +142,9 @@ export async function GET(req: NextRequest) {
     try {
       const live = await searchLive(q, key, typeParam, userInput || q);
       if (live?.length) {
-        const sorted = finalizeResults(live, q, sort, userInput || q);
+        const sorted = finalizeResults(live, userInput || q, sort, userInput || q);
         return NextResponse.json({
-          results: sorted.slice(0, 16),
+          results: sorted.slice(0, 20),
           mode: "live",
           sort,
           queryUsed: q,
@@ -197,8 +200,18 @@ export async function GET(req: NextRequest) {
   });
 }
 
-function filterByType<T extends { type?: MediaType }>(items: T[], type?: MediaType | "all" | null): T[] {
+function filterByType<T extends { type?: MediaType; title?: string; channel?: string }>(
+  items: T[],
+  type?: MediaType | "all" | null,
+): T[] {
   if (!type || type === "all") return items;
+  if (type === "sport") {
+    return items.filter(
+      (i) =>
+        i.type === "sport" ||
+        SPORT_HINTS.test(`${i.title ?? ""} ${i.channel ?? ""}`),
+    );
+  }
   return items.filter((i) => i.type === type);
 }
 
@@ -217,6 +230,7 @@ async function searchLiveOnce(
   key: string,
   opts: {
     artist: boolean;
+    sport?: boolean;
     filmSearch?: boolean;
     searchQ?: string;
     typeFilter?: MediaType | "all" | null;
@@ -227,9 +241,11 @@ async function searchLiveOnce(
   searchUrl.searchParams.set("part", "snippet");
   searchUrl.searchParams.set("q", searchQ);
   searchUrl.searchParams.set("type", "video");
-  searchUrl.searchParams.set("maxResults", "25");
+  searchUrl.searchParams.set("maxResults", "40");
   searchUrl.searchParams.set("videoDefinition", "high");
-  if (!opts.artist && !opts.filmSearch) {
+  if (opts.sport) {
+    searchUrl.searchParams.set("videoCategoryId", "17");
+  } else if (!opts.artist && !opts.filmSearch) {
     searchUrl.searchParams.set("videoCategoryId", "1");
   }
   if (opts.filmSearch && opts.videoDuration) {
@@ -251,7 +267,7 @@ async function searchLiveOnce(
 
   type Mapped = ReturnType<typeof mapResult> & { duration?: string };
   const mapped = (vr.items ?? []).map((v: Parameters<typeof mapResult>[0]) => {
-    const r = mapResult(v);
+    const r = mapResult(v, { rankQuery: opts.searchQ });
     const durationSec = parseDurationSeconds(v.contentDetails?.duration);
     return { r, durationSec };
   });
@@ -259,12 +275,16 @@ async function searchLiveOnce(
   return mapped
     .filter((row: { r: Mapped; durationSec: number | null }) =>
       isUsableClip(row.r.title, row.r.channel, row.durationSec, {
-        allowArtist: opts.artist,
-        filmSearch: opts.filmSearch,
+        allowArtist: opts.artist || opts.sport,
+        filmSearch: opts.filmSearch && !opts.artist && !opts.sport,
         query: opts.searchQ,
       }),
     )
-    .map((row: { r: Mapped }) => row.r);
+    .map((row: { r: Mapped }) => {
+      if (opts.sport) return { ...row.r, type: "sport" as MediaType };
+      if (opts.artist) return { ...row.r, type: "person" as MediaType };
+      return row.r;
+    });
 }
 
 function demoToResults(q: string, typeFilter?: MediaType | "all" | null): SearchResult[] {
@@ -285,17 +305,17 @@ function demoToResults(q: string, typeFilter?: MediaType | "all" | null): Search
 
 async function searchLive(q: string, key: string, typeFilter?: MediaType | "all" | null, rankQuery?: string) {
   const core = (rankQuery ?? q).trim();
-  const artist = isArtistQuery(core);
-  const filmSearch = isFilmTitleQuery(core);
-  const queries = artist
-    ? [
-        augmentSearchQuery(core),
-        `${core} official music video`,
-        `${core} vevo 4k`,
-      ]
-    : filmSearch
-      ? filmSearchQueries(q)
-      : [`${q.trim()} scene pack clips for edits`, `${q.trim()} movie scene 4k`];
+  const sportMode = typeFilter === "sport" || SPORT_HINTS.test(core);
+  const personMode = typeFilter === "person" || isArtistQuery(core);
+  const artist = personMode;
+  const filmSearch = !sportMode && !personMode && isFilmTitleQuery(core);
+  const queries = sportMode
+    ? sportSearchQueries(core)
+    : personMode
+      ? personSearchQueries(core)
+      : filmSearch
+        ? filmSearchQueries(core)
+        : [`${core} scene pack clips for edits`, `${core} movie scene 4k`];
 
   const seen = new Set<string>();
   const merged: SearchResult[] = [];
@@ -308,8 +328,9 @@ async function searchLive(q: string, key: string, typeFilter?: MediaType | "all"
     for (const dur of durations) {
       const batch = await searchLiveOnce(searchQ, key, {
         artist,
+        sport: sportMode,
         filmSearch,
-        searchQ: rankQuery ?? q,
+        searchQ: rankQuery ?? core,
         typeFilter,
         videoDuration: dur,
       });
@@ -319,9 +340,9 @@ async function searchLive(q: string, key: string, typeFilter?: MediaType | "all"
         seen.add(r.youtubeId);
         merged.push(r);
       }
-      if (merged.length >= 28) break;
+      if (merged.length >= 36) break;
     }
-    if (merged.length >= 28) break;
+    if (merged.length >= 36) break;
   }
 
   if (merged.length === 0) {
@@ -333,13 +354,13 @@ async function searchLive(q: string, key: string, typeFilter?: MediaType | "all"
   }
 
   const results: SearchResult[] = await Promise.all(
-    merged.slice(0, 20).map(async (r) => {
+    merged.slice(0, 24).map(async (r) => {
       const transcript = await fetchTranscriptSnippet(r.youtubeId);
       return { ...r, transcript: transcript ?? r.transcript };
     }),
   );
 
-  return filterByType(results, artist ? "all" : typeFilter);
+  return filterByType(results, typeFilter);
 }
 
 export const dynamic = "force-dynamic";

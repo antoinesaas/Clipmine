@@ -34,12 +34,17 @@ async function ensureCookiesFile(): Promise<string | null> {
   return null;
 }
 
+const USER_AGENT =
+  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36";
+
 function baseArgs(outputPath: string, url: string): string[] {
   return [
     "--js-runtimes",
     "node",
     "--remote-components",
     "ejs:github",
+    "--user-agent",
+    USER_AGENT,
     "--geo-bypass",
     "--extractor-retries",
     "4",
@@ -71,6 +76,11 @@ const STRATEGIES: Strategy[] = [
       "youtube:player_client=android,web,web_embedded;player_skip=webpage,configs",
     ],
     format: ["-f", "bv*[height<=1080][ext=mp4]+ba[ext=m4a]/b[height<=1080]/best[ext=mp4]/best"],
+  },
+  {
+    label: "android_creator",
+    extra: ["--extractor-args", "youtube:player_client=android_creator,android"],
+    format: ["-f", "best[height<=1080][ext=mp4]/best"],
   },
   {
     label: "tv_embedded",

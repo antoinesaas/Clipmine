@@ -10,7 +10,7 @@ const SERIES_HINTS =
 const ANIMATION_HINTS =
   /\b(anime|cartoon|animated|animation|pixar|disney|dreamworks|lego|dessin animé|dessin animé|cnl|nickelodeon|studio ghibli|marvel animation|batman animation)\b/i;
 
-const SPORT_HINTS =
+export const SPORT_HINTS =
   /\b(sport|sports|football|soccer|nba|nfl|ufc|mma|match|goal|goals|highlights|basketball|tennis|f1|formula 1|champions league|psg|real madrid|rugby|olympics|jo\b|world cup)\b/i;
 
 const PERSON_HINTS =
@@ -85,18 +85,26 @@ export function isShortOrEditedClip(title: string, channel = "", durationSec?: n
   return false;
 }
 
+const PERSON_NAME_RE =
+  /^[a-zàâäéèêëïîôùûüç\s.'-]{2,48}$/i;
+
 export function isArtistQuery(q: string): boolean {
-  const t = q.trim();
+  const t = q
+    .trim()
+    .replace(/\b(scene\s*pack|movieclips?|clips?\s+for\s+edits?|scenepack|4k|hd|official)\b/gi, "")
+    .trim();
   if (t.length < 2) return false;
   if (/(youtube\.com|youtu\.be)/.test(t)) return false;
   if (KNOWN_FILM_TITLES.test(t)) return false;
-  if (FILM_HINTS.test(t) || SERIES_HINTS.test(t)) return false;
-  if (/\b(scene|clip|trailer|film|movie|série|series|4k|official clip|saison|episode|movieclips|pack|edit)\b/i.test(t)) {
+  if (FILM_HINTS.test(t) || SERIES_HINTS.test(t) || SPORT_HINTS.test(t)) return false;
+  if (ANIMATION_HINTS.test(t)) return false;
+  if (/\b(scene|clip|trailer|film|movie|série|series|saison|episode|pack|edit)\b/i.test(t)) {
     return false;
   }
   if (MUSIC_IN_QUERY.test(t)) return true;
   const words = t.split(/\s+/).filter(Boolean);
-  return words.length >= 2 && words.length <= 5;
+  if (words.length >= 2 && words.length <= 4 && PERSON_NAME_RE.test(t)) return true;
+  return false;
 }
 
 export function isFilmTitleQuery(q: string): boolean {
@@ -124,6 +132,9 @@ export function isUsableClip(
 ): boolean {
   if (isShortOrEditedClip(title, channel, durationSec)) return false;
   if (BLOCKLIST.test(`${title} ${channel}`)) return false;
+  if (/\b(mega\.nz|mega link|workprint|hdcam|camrip|telecine)\b/i.test(`${title} ${channel}`)) {
+    return false;
+  }
 
   const filmSearch = !!opts?.filmSearch;
   const minDur = EDIT_SOURCE_RE.test(`${title} ${channel}`) ? 35 : 48;
@@ -173,10 +184,33 @@ export function augmentSearchQuery(q: string): string {
   const trimmed = q.trim();
   if (/(youtube\.com|youtu\.be)/.test(trimmed)) return trimmed;
   if (isArtistQuery(trimmed)) {
-    return `${trimmed} official music video`;
+    return `${trimmed} scenepack clips for edits`;
+  }
+  if (SPORT_HINTS.test(trimmed)) {
+    return `${trimmed} sports highlights 4k`;
   }
   const core = trimmed.replace(/\b(movie|film|scene|4k|clip|official|pack)\b/gi, "").trim() || trimmed;
   return `${core} scene pack clips for edits`;
+}
+
+export function personSearchQueries(q: string): string[] {
+  const core = q.trim().replace(/\b(scene\s*pack|movieclips?|4k|clip|edit)\b/gi, "").trim() || q.trim();
+  return [
+    `${core} scenepack clips for edits`,
+    `${core} clip for edits 4k`,
+    `${core} aesthetic scenepack logoless`,
+    `${core} edit material compilation`,
+  ];
+}
+
+export function sportSearchQueries(q: string): string[] {
+  const core = q.trim().replace(/\b(sport|sports|highlights|4k|clip)\b/gi, "").trim() || q.trim();
+  return [
+    `${core} sports highlights 4k`,
+    `${core} best goals compilation HD`,
+    `${core} match iconic moments`,
+    `${core} football basketball highlights`,
+  ];
 }
 
 export function filmSearchQueries(q: string): string[] {
