@@ -134,8 +134,21 @@ export function buildFallbackFilterChains(input: PipelineInput): string[] {
   const medium = `${crop}${scale}${denoise}${enhance}`.replace(/^,/, "");
   const minimal = `${crop}${scale || `,scale=${w}:${h}`}`.replace(/^,/, "");
 
-  // Pour chaque chain, on note si elle contient slowmo pour corriger l'audio côté appelant
-  return [full, medium, minimal].filter(Boolean);
+  // Fallback 1080p : si le machine Fly.io n'a pas assez de RAM pour encoder en 4K/1440p,
+  // on replie sur 1080p (moins gourmand en mémoire).
+  const [w1080, h1080] =
+    ratio === "9:16" ? [1080, 1920] : ratio === "4:3" ? [1440, 1080] : [1920, 1080];
+  const cropBase =
+    ratio === "9:16"
+      ? "crop='min(iw,ih*9/16)':ih:(iw-min(iw,ih*9/16))/2:0"
+      : ratio === "4:3"
+        ? "crop='min(iw,ih*4/3)':ih:(iw-min(iw,ih*4/3))/2:0"
+        : "";
+  const safe1080 = cropBase
+    ? `${cropBase},scale=${w1080}:${h1080}:flags=lanczos`
+    : `scale=${w1080}:${h1080}:force_original_aspect_ratio=decrease,pad=${w1080}:${h1080}:(ow-iw)/2:(oh-ih)/2:color=black`;
+
+  return [full, medium, minimal, safe1080].filter(Boolean);
 }
 
 export function normalizeTools(raw: unknown, enhance: boolean): AiTool[] {

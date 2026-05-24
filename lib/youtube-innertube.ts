@@ -36,6 +36,19 @@ type InnerTubeResponse = {
 };
 
 const INNERTUBE_CLIENTS = [
+  // ANDROID_VR : pas de PO token requis sur datacenter (le plus fiable actuellement)
+  {
+    clientName: "ANDROID_VR",
+    clientVersion: "1.60.19",
+    androidSdkVersion: 32,
+    clientNameId: "28",
+  },
+  // TV_EMBEDDED : très peu restreint, fonctionne sans cookies ni PO token
+  {
+    clientName: "TVHTML5_SIMPLY_EMBEDDED_PLAYER",
+    clientVersion: "2.0",
+    clientNameId: "85",
+  },
   // ANDROID : URLs directes, peu bloqué, idéal pour extraire
   {
     clientName: "ANDROID",
@@ -56,11 +69,17 @@ const INNERTUBE_CLIENTS = [
     clientVersion: "18.09.2",
     clientNameId: "5",
   },
-  // TV_EMBEDDED : souvent moins restreint pour le contenu avec Content ID
+  // MWEB : mobile web, pas de PO token requis, donne des formats muxés
   {
-    clientName: "TVHTML5_SIMPLY_EMBEDDED_PLAYER",
-    clientVersion: "2.0",
-    clientNameId: "85",
+    clientName: "MWEB",
+    clientVersion: "2.20241202.07.00",
+    clientNameId: "2",
+  },
+  // WEB_EMBEDDED_PLAYER : player embarqué web, moins restreint
+  {
+    clientName: "WEB_EMBEDDED_PLAYER",
+    clientVersion: "2.20241202.00.00",
+    clientNameId: "56",
   },
 ];
 
@@ -103,9 +122,19 @@ async function fetchInnerTube(
       },
     );
 
-    if (!res.ok) return null;
-    return (await res.json()) as InnerTubeResponse;
-  } catch {
+    if (!res.ok) {
+      console.warn(`[innertube] ${client.clientName} HTTP ${res.status} for ${videoId}`);
+      return null;
+    }
+    const data = (await res.json()) as InnerTubeResponse;
+    if (!data.streamingData) {
+      console.warn(
+        `[innertube] ${client.clientName} no streamingData for ${videoId} — status: ${data.playabilityStatus?.status ?? "?"} ${data.playabilityStatus?.reason?.slice(0, 120) ?? ""}`,
+      );
+    }
+    return data;
+  } catch (e) {
+    console.warn(`[innertube] ${client.clientName} fetch error for ${videoId}:`, String(e).slice(0, 150));
     return null;
   }
 }

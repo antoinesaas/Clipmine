@@ -121,7 +121,10 @@ async function runFfmpegWithFallbacks(
     } catch (e) {
       lastErr = e;
       const err = e as { stderr?: string; message?: string };
-      console.warn("[worker] ffmpeg fail", i + 1, (err.stderr ?? err.message ?? "").slice(0, 300));
+      // On affiche la queue du stderr (la bannière ffmpeg prend ~700 chars au début)
+      const rawErr = err.stderr ?? err.message ?? "";
+      const errTail = rawErr.length > 700 ? rawErr.slice(-800) : rawErr;
+      console.warn("[worker] ffmpeg fail", i + 1, errTail.slice(0, 700));
     }
   }
   throw lastErr;
