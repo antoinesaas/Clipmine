@@ -57,8 +57,6 @@ export default function SearchPanel({
   const [typeFilter, setTypeFilter] = useState<TypeFilter>("all");
   const [sort, setSort] = useState<SortMode>("scene");
   const [showMoreChips, setShowMoreChips] = useState(false);
-  const [lastQueryUsed, setLastQueryUsed] = useState<string | null>(null);
-
   useEffect(() => {
     if (initialQuery.trim()) runSearch(initialQuery, typeFilter, sort);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -67,9 +65,8 @@ export default function SearchPanel({
   async function runSearch(q?: string, type: TypeFilter = typeFilter, sortMode: SortMode = sort) {
     const raw = (q ?? query).trim();
     if (!raw) return;
-    const { userInput, apiQuery, augmented } = normalizeSearchQuery(raw, type);
+    const { userInput, apiQuery } = normalizeSearchQuery(raw, type);
     setQuery(userInput);
-    setLastQueryUsed(augmented ? apiQuery : null);
     setLoading(true);
     setResults([]);
     setError(null);
@@ -111,14 +108,8 @@ export default function SearchPanel({
     <div className="search-panel">
       <div className="search-panel-controls">
         <p className="search-hint">
-          Film, série, artiste ou <strong>lien YouTube</strong> — puis export 4K.
-          <span className="search-hint-sub"> Entrée = scene pack (films) ou clip for edits (artistes).</span>
+          Film, série, artiste ou <strong>lien YouTube</strong>
         </p>
-        {lastQueryUsed && (
-          <p className="search-query-used">
-            Recherche YouTube : <strong>{lastQueryUsed}</strong>
-          </p>
-        )}
 
         <div className="search-box-min">
           <input

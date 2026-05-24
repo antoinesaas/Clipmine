@@ -63,6 +63,10 @@ function baseArgs(outputTemplatePath: string, url: string, cookies: string | nul
     "https://www.youtube.com/",
     "--merge-output-format",
     "mp4",
+    "--sleep-interval",
+    "1",
+    "--max-sleep-interval",
+    "3",
     "-o",
     outputTemplatePath,
   ];
@@ -75,9 +79,19 @@ type Strategy = { label: string; extra: string[]; format: string[] };
 
 const STRATEGIES: Strategy[] = [
   {
+    label: "best_any",
+    extra: [],
+    format: ["-f", "b/bv*+ba/best"],
+  },
+  {
     label: "simple_mp4",
     extra: [],
     format: ["-f", "best[ext=mp4][height<=1080]/best[height<=1080][ext=mp4]/best[height<=1080]"],
+  },
+  {
+    label: "android_sdkless",
+    extra: ["--extractor-args", "youtube:player_client=android_sdkless,web"],
+    format: ["-f", "best[height<=1080]/best"],
   },
   {
     label: "android+web",

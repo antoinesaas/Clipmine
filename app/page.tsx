@@ -141,9 +141,6 @@ export default function Landing() {
                 ))}
               </div>
             </div>
-            <div className="hero-note">
-              Films & séries · lien YouTube · export 4K
-            </div>
           </div>
           </div>
         </div>

@@ -161,6 +161,7 @@ export function ExportModal({
   async function exportClip() {
     setBusy(true);
     try {
+      const activeTools = enhance ? reconcileToolSelection(tools) : [];
       const r = await fetch("/api/download", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -169,8 +170,8 @@ export function ExportModal({
           title: clip.title,
           ratio,
           quality,
-          enhance,
-          tools: enhance ? reconcileToolSelection(tools) : [],
+          enhance: activeTools.length > 0,
+          tools: activeTools,
         }),
       });
       if (r.status === 402) {
@@ -195,7 +196,7 @@ export function ExportModal({
         return;
       }
       const jobId = data.jobId ?? String(Date.now());
-      const toolList = enhance ? tools : [];
+      const toolList = activeTools;
       saveExportLocal({
         id: jobId,
         title: clip.title,

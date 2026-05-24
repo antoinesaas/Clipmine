@@ -143,7 +143,7 @@ app.post("/process", auth, async (req, res) => {
     return;
   }
 
-  const tools = normalizeTools(rawTools, !!enhance);
+  const tools = normalizeTools(rawTools, enhance !== false);
   res.json({ status: "accepted", jobId, tools });
 
   const workDir = path.join(TMP, jobId);

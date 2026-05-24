@@ -7,6 +7,7 @@ import {
   PIPELINE_UI_STAGES,
   computeProgressPercent,
   estimateRemainingSeconds,
+  ffmpegStageLabel,
   ffmpegStepLabels,
   formatEta,
   resolveStage,
@@ -170,7 +171,9 @@ export default function ExportProgressView({
                 className={`export-progress-step ${done ? "done" : ""} ${active ? "active" : ""}`}
               >
                 <span className="export-progress-step-dot" />
-                <span className="export-progress-step-label">{step.label}</span>
+                <span className="export-progress-step-label">
+                  {stepId === "ffmpeg" ? ffmpegStageLabel(activeTools.length) : step.label}
+                </span>
                 {active && stepId === "ffmpeg" && (
                   <ul className="export-progress-substeps">
                     {ffmpegSteps.map((line) => (
@@ -198,9 +201,7 @@ export default function ExportProgressView({
             <p>{data?.errorMessage ?? "Export échoué."}</p>
             {/téléchargement|youtube|privée|réseau/i.test(data?.errorMessage ?? "") && (
               <p className="export-progress-error-tip">
-                Essaie un autre clip (Movieclips / scene pack), ou colle un lien YouTube direct.
-                Les blocages YouTube côté serveur nécessitent parfois des cookies sur Fly (
-                <code>YT_COOKIES_BASE64</code>).
+                Essaie un autre clip ou colle un lien YouTube direct.
               </p>
             )}
             <Link href="/app/search" className="btn-mine">

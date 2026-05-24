@@ -1979,20 +1979,22 @@ footer {
   }
 
   .hero {
+    position: relative;
     min-height: auto;
     padding-top: calc(52px + env(safe-area-inset-top, 0px));
-    padding-bottom: 16px;
-    display: flex;
-    flex-direction: column;
+    padding-bottom: 12px;
+    display: grid;
+    grid-template-columns: 1fr;
   }
   .hero-clips-zone {
     position: relative;
     inset: auto;
     height: clamp(200px, 36vh, 280px);
     width: 100%;
+    grid-row: 1;
+    grid-column: 1;
     z-index: 0;
     overflow: hidden;
-    flex-shrink: 0;
   }
   .clip-thumb { width: 118px; height: 66px; }
   .hero-fade-clips {
@@ -2006,20 +2008,34 @@ footer {
     );
   }
   .hero-front {
-    position: relative;
+    grid-row: 1;
+    grid-column: 1;
     z-index: 2;
-    display: block;
-    min-height: auto;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    align-self: end;
+    min-height: clamp(200px, 36vh, 280px);
     padding-top: 0;
     padding-bottom: 0;
+    pointer-events: none;
+  }
+  .hero-front .hero-in,
+  .hero-front .hero-search,
+  .hero-front .search-box,
+  .hero-front button,
+  .hero-front input {
+    pointer-events: auto;
   }
   .hero-copy {
-    padding-top: 12px;
+    padding-top: 0;
+    padding-bottom: 6px;
     position: relative;
   }
   .hero-search {
-    padding-top: 4px;
+    padding-top: 0;
     padding-bottom: 0;
+    margin-top: auto;
   }
   .hero-in { z-index: 1; }
   .hero-copy h1,

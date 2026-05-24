@@ -140,11 +140,8 @@ export function buildFallbackFilterChains(input: PipelineInput): string[] {
 
 export function normalizeTools(raw: unknown, enhance: boolean): AiTool[] {
   const all: AiTool[] = ["upscale", "enhance", "denoise", "stabilize", "fps", "slowmo"];
-  if (!enhance) return ["upscale"];
-  if (!Array.isArray(raw) || raw.length === 0) {
-    return ["upscale", "enhance", "denoise", "fps"];
-  }
+  if (!enhance) return [];
+  if (!Array.isArray(raw) || raw.length === 0) return [];
   const picked = raw.filter((t): t is AiTool => typeof t === "string" && all.includes(t as AiTool));
-  const base = picked.length ? picked : ["upscale", "enhance", "denoise", "fps"];
-  return reconcileTools(base);
+  return reconcileTools(picked);
 }

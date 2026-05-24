@@ -50,9 +50,11 @@ export function sanitizeTools(
   const allowed = new Set(allowedToolsForPlan(plan, enhance));
   if (!enhance || allowed.size === 0) return [];
 
-  const list = Array.isArray(requested) ? requested : defaultToolsForPlan(plan, enhance);
-  const picked = list.filter((t): t is AiToolId =>
+  if (!Array.isArray(requested)) {
+    return reconcileToolSelection(defaultToolsForPlan(plan, enhance));
+  }
+  const picked = requested.filter((t): t is AiToolId =>
     typeof t === "string" && (AI_TOOL_IDS as readonly string[]).includes(t) && allowed.has(t as AiToolId),
   );
-  return reconcileToolSelection(picked.length ? picked : defaultToolsForPlan(plan, enhance));
+  return reconcileToolSelection(picked);
 }

@@ -89,8 +89,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "paywall", reason: ent.reason }, { status: 402 });
     }
 
-    const wantsEnhance = enhance !== false;
-    const tools = sanitizeTools(rawTools, user.plan, wantsEnhance);
+    const enhanceOn = enhance !== false;
+    const tools = sanitizeTools(rawTools, user.plan, enhanceOn);
+    const wantsEnhance = tools.length > 0;
     const exportQuality = normalizeExportQuality(quality);
 
     const dl = await prisma.download.create({
