@@ -1,6 +1,6 @@
 import { execFile } from "child_process";
 import { promisify } from "util";
-import { access, readdir, rename, writeFile } from "fs/promises";
+import { access, mkdir, readdir, rename, writeFile } from "fs/promises";
 import path from "path";
 
 const exec = promisify(execFile);
@@ -25,6 +25,7 @@ async function ensureCookiesFile(): Promise<string | null> {
   }
   if (b64) {
     try {
+      await mkdir(TMP, { recursive: true });
       await writeFile(COOKIES_PATH, Buffer.from(b64, "base64"));
       return COOKIES_PATH;
     } catch {
@@ -35,7 +36,7 @@ async function ensureCookiesFile(): Promise<string | null> {
 }
 
 const USER_AGENT =
-  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36";
+  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36";
 
 function outputTemplate(finalPath: string): string {
   const dir = path.dirname(finalPath);
@@ -43,12 +44,8 @@ function outputTemplate(finalPath: string): string {
   return path.join(dir, `${base}.%(ext)s`);
 }
 
-function baseArgs(outputTemplatePath: string, url: string): string[] {
-  return [
-    "--js-runtimes",
-    "node",
-    "--remote-components",
-    "ejs:github",
+function baseArgs(outputTemplatePath: string, url: string, cookies: string | null): string[] {
+  const args = [
     "--user-agent",
     USER_AGENT,
     "--geo-bypass",
@@ -59,46 +56,46 @@ function baseArgs(outputTemplatePath: string, url: string): string[] {
     "--fragment-retries",
     "6",
     "--socket-timeout",
-    "60",
+    "90",
     "--no-playlist",
     "--no-warnings",
     "--referer",
     "https://www.youtube.com/",
     "--merge-output-format",
     "mp4",
-    "--remux-video",
-    "mp4",
     "-o",
     outputTemplatePath,
-    url,
   ];
+  if (cookies) args.push("--cookies", cookies);
+  args.push(url);
+  return args;
 }
 
 type Strategy = { label: string; extra: string[]; format: string[] };
 
 const STRATEGIES: Strategy[] = [
   {
+    label: "simple_mp4",
+    extra: [],
+    format: ["-f", "best[ext=mp4][height<=1080]/best[height<=1080][ext=mp4]/best[height<=1080]"],
+  },
+  {
     label: "android+web",
     extra: [
       "--extractor-args",
       "youtube:player_client=android,web,web_embedded;player_skip=webpage,configs",
     ],
-    format: ["-f", "bv*[height<=1080][ext=mp4]+ba[ext=m4a]/b[height<=1080]/best[ext=mp4]/best"],
+    format: ["-f", "bv*[height<=1080]+ba/b[height<=1080]/best"],
   },
   {
     label: "android_creator",
     extra: ["--extractor-args", "youtube:player_client=android_creator,android"],
-    format: ["-f", "best[height<=1080][ext=mp4]/best"],
+    format: ["-f", "best[height<=1080]/best"],
   },
   {
     label: "tv_embedded",
     extra: ["--extractor-args", "youtube:player_client=tv_embedded,web"],
-    format: ["-f", "best[height<=1080][ext=mp4]/best[ext=mp4]/best"],
-  },
-  {
-    label: "android_vr",
-    extra: ["--extractor-args", "youtube:player_client=android_vr"],
-    format: ["-f", "best[height<=1080][ext=mp4]/best"],
+    format: ["-f", "best[height<=1080]/best"],
   },
   {
     label: "ios",
@@ -113,12 +110,18 @@ const STRATEGIES: Strategy[] = [
   {
     label: "fallback_any",
     extra: ["--extractor-args", "youtube:player_client=android"],
-    format: ["-f", "bestvideo[height<=1080]+bestaudio/best[height<=1080]/best"],
+    format: ["-f", "bestvideo[height<=1080]+bestaudio/best"],
   },
 ];
 
-async function runYtdlp(args: string[]) {
-  await exec("yt-dlp", args, { timeout: 600_000, maxBuffer: 16 * 1024 * 1024 });
+async function runYtdlp(args: string[]): Promise<void> {
+  try {
+    await exec("yt-dlp", args, { timeout: 600_000, maxBuffer: 16 * 1024 * 1024 });
+  } catch (e: unknown) {
+    const err = e as { stderr?: string; stdout?: string; message?: string };
+    const detail = [err.stderr, err.stdout, err.message].filter(Boolean).join("\n").trim();
+    throw new Error(detail.slice(0, 900) || "yt-dlp a échoué");
+  }
 }
 
 /** Après yt-dlp, le fichier peut être raw.webm / raw.mkv — on normalise vers raw.mp4 */
@@ -152,9 +155,10 @@ export async function downloadYoutubeMp4(youtubeId: string, outputPath: string) 
   const dir = path.dirname(outputPath);
   const template = outputTemplate(outputPath);
 
+  await mkdir(dir, { recursive: true });
+
   for (const strategy of STRATEGIES) {
-    const args = [...baseArgs(template, url), ...strategy.extra, ...strategy.format];
-    if (cookies) args.splice(1, 0, "--cookies", cookies);
+    const args = [...baseArgs(template, url, cookies), ...strategy.extra, ...strategy.format];
 
     try {
       await runYtdlp(args);
@@ -163,12 +167,13 @@ export async function downloadYoutubeMp4(youtubeId: string, outputPath: string) 
       return;
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
-      errors.push(`${strategy.label}: ${msg.slice(0, 160)}`);
-      console.warn("[ytdlp] fail", strategy.label, msg.slice(0, 240));
+      errors.push(`${strategy.label}: ${msg.slice(0, 200)}`);
+      console.warn("[ytdlp] fail", strategy.label, msg.slice(0, 300));
     }
   }
 
-  const botBlock = errors.some((x) => /bot|sign in|confirm|not a bot/i.test(x));
+  const joined = errors.join(" | ");
+  const botBlock = /bot|sign in|confirm|not a bot|login required/i.test(joined);
   throw new Error(
     botBlock
       ? cookies

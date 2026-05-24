@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback, Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { toast } from "sonner";
+import { openExportUrl } from "@/lib/open-export-url";
 
 type ExportJob = {
   id: string;
@@ -61,7 +62,7 @@ function ExportsContent() {
         toast.error(data.error ?? "Lien indisponible.");
         return;
       }
-      window.open(data.fileUrl, "_blank", "noopener,noreferrer");
+      openExportUrl(data.fileUrl);
       await refresh();
     } catch {
       toast.error("Erreur réseau.");

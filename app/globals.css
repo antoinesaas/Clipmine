@@ -1979,43 +1979,42 @@ footer {
   }
 
   .hero {
-    position: relative;
-    min-height: min(92vh, 760px);
-    padding-bottom: 20px;
+    min-height: auto;
     padding-top: calc(52px + env(safe-area-inset-top, 0px));
-    display: block;
+    padding-bottom: 16px;
+    display: flex;
+    flex-direction: column;
   }
   .hero-clips-zone {
-    position: absolute;
-    inset: 0;
-    height: 100%;
+    position: relative;
+    inset: auto;
+    height: clamp(200px, 36vh, 280px);
+    width: 100%;
     z-index: 0;
     overflow: hidden;
+    flex-shrink: 0;
   }
   .clip-thumb { width: 118px; height: 66px; }
   .hero-fade-clips {
     background: linear-gradient(
       180deg,
-      rgba(5, 5, 7, 0.12) 0%,
-      rgba(5, 5, 7, 0) 18%,
-      rgba(5, 5, 7, 0.22) 50%,
-      rgba(5, 5, 7, 0.68) 82%,
-      rgba(5, 5, 7, 0.92) 96%,
+      rgba(5, 5, 7, 0.08) 0%,
+      rgba(5, 5, 7, 0) 24%,
+      rgba(5, 5, 7, 0.3) 58%,
+      rgba(5, 5, 7, 0.75) 88%,
       var(--bg) 100%
     );
   }
   .hero-front {
     position: relative;
-    z-index: 10;
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
-    min-height: min(78vh, 680px);
-    padding-top: 36vh;
-    padding-bottom: 8px;
+    z-index: 2;
+    display: block;
+    min-height: auto;
+    padding-top: 0;
+    padding-bottom: 0;
   }
   .hero-copy {
-    padding-top: 0;
+    padding-top: 12px;
     position: relative;
   }
   .hero-search {
@@ -2036,14 +2035,11 @@ footer {
   .clip-bg {
     gap: 8px;
     position: absolute;
-    top: -28%;
-    left: -8%;
-    right: -8%;
-    bottom: -6%;
+    inset: -14% -6%;
     height: auto;
-    min-height: 135%;
-    transform: rotate(-2deg) scale(1.22);
-    opacity: 0.72;
+    min-height: 120%;
+    transform: rotate(-2deg) scale(1.14);
+    opacity: 0.76;
     will-change: transform;
   }
   .search-shell {

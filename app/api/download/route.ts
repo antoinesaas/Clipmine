@@ -60,8 +60,15 @@ export async function POST(req: NextRequest) {
   const body = await req.json().catch(() => ({}));
   const { youtubeId, title, ratio, quality, enhance, tools: rawTools } = body ?? {};
 
-  if (!youtubeId) {
+  const ytId = String(youtubeId ?? "").trim();
+  if (!ytId) {
     return NextResponse.json({ error: "missing_youtube_id" }, { status: 400 });
+  }
+  if (!/^[a-zA-Z0-9_-]{11}$/.test(ytId)) {
+    return NextResponse.json(
+      { error: "invalid_youtube_id", message: "ID YouTube invalide pour cet export." },
+      { status: 400 },
+    );
   }
 
   if (!hasDatabase || !isPipelineReady()) {
@@ -89,7 +96,7 @@ export async function POST(req: NextRequest) {
     const dl = await prisma.download.create({
       data: {
         userId: user.id,
-        youtubeId,
+        youtubeId: ytId,
         title: title ?? "Untitled",
         ratio: ratio ?? "9:16",
         quality: exportQuality,
@@ -103,7 +110,7 @@ export async function POST(req: NextRequest) {
     if (hasWorker()) {
       const dispatched = await dispatchToWorker({
         jobId: dl.id,
-        youtubeId,
+        youtubeId: ytId,
         title: title ?? "Untitled",
         ratio: ratio ?? "9:16",
         quality: exportQuality,

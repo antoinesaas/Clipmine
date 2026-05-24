@@ -22,7 +22,7 @@ const exec = promisify(execFile);
 const app = express();
 app.use(express.json({ limit: "2mb" }));
 
-const SECRET = process.env.WORKER_SECRET ?? "";
+const SECRET = (process.env.WORKER_SECRET ?? "").trim().replace(/[\r\n]+/g, "");
 const PORT = Number(process.env.PORT ?? 8080);
 const TMP = process.env.TMP_DIR ?? "/tmp/clipmine";
 const MAX_CLIP_SEC = Number(process.env.MAX_CLIP_SEC ?? 180);
@@ -174,14 +174,16 @@ app.post("/process", auth, async (req, res) => {
       console.log("[worker] done", jobId, tools.join("+"), fileUrl);
     } catch (e) {
       const err = e as { stderr?: string; message?: string };
-      const raw = err.stderr ?? err.message ?? String(e);
+      const raw = [err.message, err.stderr].filter(Boolean).join("\n") || String(e);
       const short =
-        raw.includes("bot") || raw.includes("Sign in")
+        /bot|sign in|login required/i.test(raw)
           ? "Impossible de télécharger cette vidéo YouTube. Essaie un autre clip."
-          : raw.includes("ffmpeg")
+          : /ffmpeg/i.test(raw)
             ? "Pipeline vidéo échoué. Réessaie avec moins d'outils IA ou un autre format."
-            : raw.slice(0, 240);
-      console.error("[worker] fail", jobId, raw.slice(0, 500));
+            : err.message && err.message.length < 280 && !/Command failed/i.test(err.message)
+              ? err.message
+              : raw.slice(0, 240);
+      console.error("[worker] fail", jobId, raw.slice(0, 800));
       await setStatus(jobId, "failed", { errorMessage: short });
     } finally {
       await rm(workDir, { recursive: true, force: true }).catch(() => {});

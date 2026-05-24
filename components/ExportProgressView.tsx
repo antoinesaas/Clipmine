@@ -14,6 +14,7 @@ import {
 } from "@/lib/pipeline-progress";
 import type { AiToolId } from "@/lib/video-tools";
 import { AI_TOOL_LABELS } from "@/lib/video-tools";
+import { openExportUrl } from "@/lib/open-export-url";
 
 type JobStatus = {
   status: string;
@@ -52,10 +53,10 @@ export default function ExportProgressView({
       if (!r.ok || !json.fileUrl) {
         throw new Error(json.error ?? "file_missing");
       }
-      window.open(json.fileUrl, "_blank", "noopener,noreferrer");
+      openExportUrl(json.fileUrl);
     } catch {
       if (data?.fileUrl) {
-        window.open(data.fileUrl, "_blank", "noopener,noreferrer");
+        openExportUrl(data.fileUrl);
         return;
       }
       toast.error("Impossible d'ouvrir le fichier — réessaie depuis Mes exports.");
