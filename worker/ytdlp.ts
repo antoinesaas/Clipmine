@@ -1,6 +1,6 @@
 import { execFile } from "child_process";
 import { promisify } from "util";
-import { access, writeFile } from "fs/promises";
+import { access, readdir, rename, writeFile } from "fs/promises";
 import path from "path";
 
 const exec = promisify(execFile);
@@ -37,7 +37,13 @@ async function ensureCookiesFile(): Promise<string | null> {
 const USER_AGENT =
   "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36";
 
-function baseArgs(outputPath: string, url: string): string[] {
+function outputTemplate(finalPath: string): string {
+  const dir = path.dirname(finalPath);
+  const base = path.basename(finalPath, path.extname(finalPath));
+  return path.join(dir, `${base}.%(ext)s`);
+}
+
+function baseArgs(outputTemplatePath: string, url: string): string[] {
   return [
     "--js-runtimes",
     "node",
@@ -53,15 +59,17 @@ function baseArgs(outputPath: string, url: string): string[] {
     "--fragment-retries",
     "6",
     "--socket-timeout",
-    "45",
+    "60",
     "--no-playlist",
     "--no-warnings",
     "--referer",
     "https://www.youtube.com/",
     "--merge-output-format",
     "mp4",
+    "--remux-video",
+    "mp4",
     "-o",
-    outputPath,
+    outputTemplatePath,
     url,
   ];
 }
@@ -113,19 +121,44 @@ async function runYtdlp(args: string[]) {
   await exec("yt-dlp", args, { timeout: 600_000, maxBuffer: 16 * 1024 * 1024 });
 }
 
+/** Après yt-dlp, le fichier peut être raw.webm / raw.mkv — on normalise vers raw.mp4 */
+async function resolveDownloadedFile(dir: string, targetPath: string): Promise<string> {
+  try {
+    await access(targetPath);
+    return targetPath;
+  } catch {
+    /* continue */
+  }
+
+  const base = path.basename(targetPath, path.extname(targetPath));
+  const files = await readdir(dir);
+  const match = files.find((f) => f.startsWith(`${base}.`) && !f.endsWith(".part"));
+  if (!match) {
+    throw new Error("Fichier téléchargé introuvable après yt-dlp.");
+  }
+
+  const found = path.join(dir, match);
+  if (found !== targetPath) {
+    await rename(found, targetPath);
+  }
+  return targetPath;
+}
+
 /** Téléchargement YouTube — multi-clients ; cookies Fly recommandés. */
 export async function downloadYoutubeMp4(youtubeId: string, outputPath: string) {
   const url = `https://www.youtube.com/watch?v=${youtubeId}`;
   const cookies = await ensureCookiesFile();
   const errors: string[] = [];
+  const dir = path.dirname(outputPath);
+  const template = outputTemplate(outputPath);
 
   for (const strategy of STRATEGIES) {
-    const args = [...baseArgs(outputPath, url), ...strategy.extra, ...strategy.format];
+    const args = [...baseArgs(template, url), ...strategy.extra, ...strategy.format];
     if (cookies) args.splice(1, 0, "--cookies", cookies);
 
     try {
       await runYtdlp(args);
-      await access(outputPath);
+      await resolveDownloadedFile(dir, outputPath);
       console.log("[ytdlp] ok", strategy.label, youtubeId, cookies ? "cookies" : "no-cookies");
       return;
     } catch (e) {
@@ -139,8 +172,8 @@ export async function downloadYoutubeMp4(youtubeId: string, outputPath: string) 
   throw new Error(
     botBlock
       ? cookies
-        ? "YouTube bloque encore ce clip. Essaie un autre extrait ou régénère les cookies."
-        : "YouTube bloque le téléchargement : configure YT_COOKIES_BASE64 sur Fly (cookies navigateur)."
+        ? "YouTube bloque ce clip. Essaie un clip Movieclips / scene pack ou colle un lien YouTube direct."
+        : "YouTube bloque le téléchargement : configure YT_COOKIES_BASE64 sur Fly."
       : "Téléchargement impossible (vidéo privée, région ou réseau).",
   );
 }

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { PRICING, formatPrice, planBullets } from "@/lib/plans";
+import { redirectToCheckout } from "@/lib/redirect-to-checkout";
 
 type Plan = "CREATOR" | "PRO" | "CREDITS_10";
 
@@ -59,7 +60,7 @@ export default function BillingPage() {
         toast.error(data.message ?? "Impossible d'ouvrir Stripe. Réessaie.");
         return;
       }
-      window.location.href = data.url;
+      redirectToCheckout(data.url);
     } catch {
       toast.error("Erreur réseau.");
     } finally {

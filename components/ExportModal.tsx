@@ -20,6 +20,7 @@ import {
 import PrimeBuyButton from "@/components/PrimeBuyButton";
 import { shouldShowPrimeBuy } from "@/lib/clip-text";
 import { EXPORT_QUALITIES, type ExportQuality } from "@/lib/export-quality";
+import { redirectToCheckout } from "@/lib/redirect-to-checkout";
 
 function useBodyLock(open: boolean) {
   useEffect(() => {
@@ -330,8 +331,9 @@ export function ExportModal({
 
 export function PaywallModal({ onClose }: { onClose: () => void }) {
   useBodyLock(true);
+  const router = useRouter();
 
-  async function checkout(plan: string) {
+  async function checkout(plan: "CREATOR" | "PRO" | "CREDITS_10") {
     try {
       const r = await fetch("/api/checkout", {
         method: "POST",
@@ -343,9 +345,17 @@ export function PaywallModal({ onClose }: { onClose: () => void }) {
         toast.info(data.message ?? "Paiements bientôt disponibles.");
         return;
       }
-      if (data.url) window.location.href = data.url;
+      if (r.status === 401) {
+        router.push(`/sign-in?redirect_url=${encodeURIComponent(`/app/billing?checkout=${plan}`)}`);
+        return;
+      }
+      if (!r.ok || !data.url) {
+        toast.error(data.message ?? "Impossible d'ouvrir le paiement Stripe.");
+        return;
+      }
+      redirectToCheckout(data.url);
     } catch {
-      toast.error("Erreur checkout");
+      toast.error("Erreur réseau.");
     }
   }
 

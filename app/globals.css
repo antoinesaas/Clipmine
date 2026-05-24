@@ -1996,11 +1996,11 @@ footer {
   .hero-fade-clips {
     background: linear-gradient(
       180deg,
-      rgba(5, 5, 7, 0.28) 0%,
-      rgba(5, 5, 7, 0.05) 22%,
-      rgba(5, 5, 7, 0.2) 52%,
-      rgba(5, 5, 7, 0.65) 82%,
-      rgba(5, 5, 7, 0.9) 96%,
+      rgba(5, 5, 7, 0.12) 0%,
+      rgba(5, 5, 7, 0) 18%,
+      rgba(5, 5, 7, 0.22) 50%,
+      rgba(5, 5, 7, 0.68) 82%,
+      rgba(5, 5, 7, 0.92) 96%,
       var(--bg) 100%
     );
   }
@@ -2009,12 +2009,13 @@ footer {
     z-index: 10;
     display: flex;
     flex-direction: column;
-    justify-content: flex-end;
-    min-height: min(88vh, 720px);
+    justify-content: flex-start;
+    min-height: min(78vh, 680px);
+    padding-top: 36vh;
     padding-bottom: 8px;
   }
   .hero-copy {
-    padding-top: clamp(108px, 24vh, 168px);
+    padding-top: 0;
     position: relative;
   }
   .hero-search {
@@ -2035,11 +2036,14 @@ footer {
   .clip-bg {
     gap: 8px;
     position: absolute;
-    inset: -18% -10%;
+    top: -28%;
+    left: -8%;
+    right: -8%;
+    bottom: -6%;
     height: auto;
-    min-height: 120%;
-    transform: rotate(-2deg) scale(1.18);
-    opacity: 0.58;
+    min-height: 135%;
+    transform: rotate(-2deg) scale(1.22);
+    opacity: 0.72;
     will-change: transform;
   }
   .search-shell {

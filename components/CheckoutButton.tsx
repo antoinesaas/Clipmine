@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
+import { redirectToCheckout } from "@/lib/redirect-to-checkout";
 
 type Plan = "CREATOR" | "PRO" | "CREDITS_10";
 
@@ -42,7 +43,7 @@ export default function CheckoutButton({
         toast.error(data.message ?? "Impossible d'ouvrir le paiement Stripe.");
         return;
       }
-      window.location.href = data.url;
+      redirectToCheckout(data.url);
     } catch {
       toast.error("Erreur réseau. Réessaie dans un instant.");
     } finally {
