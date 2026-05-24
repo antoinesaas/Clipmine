@@ -80,7 +80,7 @@ export default function Landing() {
         <div className="hero-front">
           <div className="hero-in wrap hero-copy">
             <div className="badge">
-              <span className="pulse" />FILMS · SÉRIES · ÉDITS TIKTOK
+              <span className="pulse" />FILMS · SÉRIES · SPORT · ANIMÉ
             </div>
             <h1>
               Trouve ta scène.<br />

@@ -54,6 +54,7 @@ export function buildVideoFilters(input: PipelineInput): string {
 
   if (ratio === "9:16") {
     f.push("crop='min(iw,ih*9/16)':ih:(iw-min(iw,ih*9/16))/2:0");
+    f.push(`scale=${w}:${h}:flags=lanczos`);
   } else if (ratio === "4:3") {
     f.push("crop='min(iw,ih*4/3)':ih:(iw-min(iw,ih*4/3))/2:0");
   } else {
@@ -72,6 +73,10 @@ export function buildVideoFilters(input: PipelineInput): string {
 
   if (ratio !== "16:9") {
     f.push(`scale=${w}:${h}:flags=lanczos`);
+  }
+
+  if (tools.includes("upscale")) {
+    f.push("unsharp=7:7:0.85:5:5:0.0");
   }
 
   if (tools.includes("enhance")) {

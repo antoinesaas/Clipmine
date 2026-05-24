@@ -324,7 +324,7 @@ async function searchLive(q: string, key: string, typeFilter?: MediaType | "all"
     if (merged.length >= 28) break;
   }
 
-  if (merged.length < 4) {
+  if (merged.length === 0) {
     for (const d of demoToResults(q, typeFilter)) {
       if (seen.has(d.youtubeId)) continue;
       seen.add(d.youtubeId);

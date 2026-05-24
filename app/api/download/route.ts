@@ -99,9 +99,6 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    await consumeExport(user.id, ent.source);
-    await pruneUserExports(user.id);
-
     let dispatchError: string | undefined;
     if (hasWorker()) {
       const dispatched = await dispatchToWorker({
@@ -115,14 +112,24 @@ export async function POST(req: NextRequest) {
       });
       if (!dispatched.ok) {
         dispatchError = dispatched.error;
+        const errMsg =
+          dispatched.error === "worker_auth"
+            ? "Erreur de configuration worker (secret). Contacte le support."
+            : "Worker indisponible. Réessaie dans 1 minute.";
         await prisma.download.update({
           where: { id: dl.id },
           data: {
             status: "failed",
-            errorMessage: "Worker indisponible. Réessaie dans 1 minute.",
+            errorMessage: errMsg,
           },
         });
+      } else {
+        await consumeExport(user.id, ent.source);
+        await pruneUserExports(user.id);
       }
+    } else {
+      await consumeExport(user.id, ent.source);
+      await pruneUserExports(user.id);
     }
 
     const toolLabels = tools.map((t) => t).join(", ");

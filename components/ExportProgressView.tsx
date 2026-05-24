@@ -122,7 +122,13 @@ export default function ExportProgressView({
         <div className="export-progress-header">
           <span className="export-progress-pulse" aria-hidden />
           <div>
-            <h1>{failed ? "Export échoué" : ready ? "Clip prêt" : "Préparation de ton clip"}</h1>
+            <h1>
+              {failed
+                ? "Export échoué"
+                : ready
+                  ? "Clip prêt"
+                  : "Préparation de votre téléchargement"}
+            </h1>
             <p className="export-progress-title">{title}</p>
             <p className="export-progress-meta">
               {ratio} · {quality}

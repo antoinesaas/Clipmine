@@ -1,4 +1,4 @@
-export type MediaType = "film" | "series";
+export type MediaType = "film" | "series" | "sport" | "person" | "animation";
 
 /** Packs / clips bruts pour montage (priorité recherche). */
 export const EDIT_SOURCE_RE =
@@ -6,6 +6,15 @@ export const EDIT_SOURCE_RE =
 
 const SERIES_HINTS =
   /\b(série|series|season|saison|episode|épisode|ep\.|s\d{1,2}e\d{1,2}|tv show|breaking bad|game of thrones|stranger things|the office|squid game|peaky blinders|succession|euphoria|arcane)\b/i;
+
+const ANIMATION_HINTS =
+  /\b(anime|cartoon|animated|animation|pixar|disney|dreamworks|lego|dessin animé|dessin animé|cnl|nickelodeon|studio ghibli|marvel animation|batman animation)\b/i;
+
+const SPORT_HINTS =
+  /\b(sport|sports|football|soccer|nba|nfl|ufc|mma|match|goal|goals|highlights|basketball|tennis|f1|formula 1|champions league|psg|real madrid|rugby|olympics|jo\b|world cup)\b/i;
+
+const PERSON_HINTS =
+  /\b(interview|concert|live performance|red carpet|awards|grammy|oscar speech|celebrity|actor|actress|singer|chanteur|chanteuse|official video|vevo|feat\.|ft\.)\b/i;
 
 const BLOCKLIST =
   /\b(gameplay|reaction|unboxing|podcast|asmr|tutorial|how to|minecraft|fortnite|roblox|vlog\b)\b/i;
@@ -36,8 +45,11 @@ const MUSIC_CHANNEL_RE =
 const TRUSTED_CLIP_CHANNELS =
   /movieclips|warner|universal|sony pictures|paramount|hbo|netflix|rotten tomatoes|scenes|clips|official|imax|4k hdr|film|cinema|scene pack|for edit/i;
 
-export function inferMediaType(title: string, channel = ""): MediaType {
-  const hay = `${title} ${channel}`;
+export function inferMediaType(title: string, channel = "", query = ""): MediaType {
+  const hay = `${title} ${channel} ${query}`;
+  if (SPORT_HINTS.test(hay)) return "sport";
+  if (ANIMATION_HINTS.test(hay)) return "animation";
+  if (PERSON_HINTS.test(hay) || isArtistQuery(query)) return "person";
   if (SERIES_HINTS.test(hay)) return "series";
   return "film";
 }
@@ -127,8 +139,17 @@ export function isUsableClip(
 
     const q = (opts.query ?? "").trim().toLowerCase();
     if (q.length > 2) {
-      const words = q.replace(/\b(movie|film|scene|4k|clip|official|pack|edit)\b/gi, "").trim().split(/\s+/);
-      if (words.some((w) => w.length > 2 && `${title} ${channel}`.toLowerCase().includes(w))) {
+      const words = q
+        .replace(/\b(movie|film|scene|4k|clip|official|pack|edit|movieclips)\b/gi, "")
+        .trim()
+        .split(/\s+/)
+        .filter((w) => w.length > 1);
+      if (words.length >= 2) {
+        const hayLc = `${title} ${channel}`.toLowerCase();
+        const hits = words.filter((w) => hayLc.includes(w)).length;
+        if (hits >= Math.min(2, words.length)) return true;
+        if (hits === 0) return false;
+      } else if (words.some((w) => `${title} ${channel}`.toLowerCase().includes(w))) {
         return true;
       }
     }
@@ -161,15 +182,41 @@ export function augmentSearchQuery(q: string): string {
 export function filmSearchQueries(q: string): string[] {
   const t = q.trim();
   const core = t.replace(/\b(movie|film|scene|scenes|4k|clip|clips|official|pack|edit)\b/gi, "").trim() || t;
+  const lower = core.toLowerCase();
+
+  if (/\blego\b/i.test(lower)) {
+    return [
+      `${core} lego movie scene pack clips for edits`,
+      `${core} lego batman movieclips 4k`,
+      `${core} lego film scenes compilation`,
+      `${core} animated movie scenes 4k`,
+    ];
+  }
+  if (ANIMATION_HINTS.test(lower)) {
+    return [
+      `${core} animated movie scene pack clips for edits`,
+      `${core} cartoon scenes 4k`,
+      `${core} animation movieclips`,
+      `${core} ${core} best scenes HD`,
+    ];
+  }
+  if (SPORT_HINTS.test(lower)) {
+    return [
+      `${core} sports highlights 4k`,
+      `${core} match best moments`,
+      `${core} goals compilation HD`,
+      `${core} ${core} iconic plays`,
+    ];
+  }
+
   return [
     `${core} scene pack clips for edits`,
     `${core} clips for edits 4k`,
+    `${core} "${core}" movieclips`,
     `${core} cinematic scenes raw footage`,
     `${core} movie scenes compilation 4k`,
-    `${core} movieclips`,
     `${core} best scenes 4k`,
     `${core} iconic scenes HD`,
-    `${core} film scenes no copyright`,
   ];
 }
 

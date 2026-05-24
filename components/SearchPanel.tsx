@@ -4,8 +4,9 @@ import { useEffect, useState } from "react";
 import ClipCard from "./ClipCard";
 import { TRENDING_FILMS } from "@/lib/demo-clips";
 import { normalizeSearchQuery } from "@/lib/normalize-search-query";
+import type { MediaType } from "@/lib/film-filter";
 
-export type MediaType = "film" | "series";
+export type { MediaType };
 
 export type ClipResult = {
   youtubeId: string;
@@ -140,6 +141,9 @@ export default function SearchPanel({
               ["all", "Tout"],
               ["film", "Films"],
               ["series", "Séries"],
+              ["sport", "Sport"],
+              ["person", "Personnes"],
+              ["animation", "Dessin animé"],
             ] as const).map(([id, label]) => (
               <button
                 key={id}
